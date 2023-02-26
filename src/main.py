@@ -1,7 +1,17 @@
 from openpyxl import *
 from openpyxl.utils import range_boundaries
+from pathlib import Path
 
-def unmerge_all_cells(workbook):
+# Получение пути интересующего нас файла
+def get_file_path():
+    with Path(r"/Users/katherine.marakhova/PycharmProjects/exampleBot/files") as direction:
+        for f in direction.glob("4-курс-бакалавриат*.xlsx"):
+            #print(f'ya nashelsya: {f}')
+            return f
+
+# Обработка объединенных ячеек, создание
+def unmerge_all_cells(path):
+    workbook = load_workbook(path)
     n = len(workbook.sheetnames)
     for i in range(n):
         sheet = workbook.worksheets[i]
@@ -13,8 +23,9 @@ def unmerge_all_cells(workbook):
             for row in sheet.iter_rows(min_col=min_col, min_row=min_row, max_col=max_col, max_row=max_row):
                 for cell in row:
                     cell.value = top_left_cell_value
-        workbook.save("openpyxl_merge_unmerge.xlsx")
+        workbook.save(path)
     exit()
+
 
 # ФУНКЦИЯ ВЫДАЕТ ИНДЕКС ЭЛЕМЕНТА ОТНОСИТЕЛЬНО ТАБЛИЦЫ
 def get_indexes(sheet, header_el):
@@ -24,188 +35,81 @@ def get_indexes(sheet, header_el):
                     #print(header_el, ' находится на (i, j): ', i , j, '\n')
                     return (i, j)
 
-# ФУНКЦИЯ ВЫДАЕТ СЛОВАРЬ {ИНСТИТУТ/НАПРАВЛЕНИЕ : ИНДЕКС_ПО_СТРОКЕ, ИНДЕКС_ПО_СТОЛБЦУ}
-def get_indexes_of_category(sheet, start_indexes):
-     y = start_indexes[0]                                             #индекс строки
-     x = start_indexes[1]                                             #индекс столбца
-     dict_of = {}
-     temp = ''
-     for j in range(x+3, sheet.max_column):                      # сдвигаемся вправо на три элемента
+"""
+        Функция возвращает словарь наименований относительно СТРАНИЦЫ
+        Название в категории(Институт/Направление/Образовательная программа) - индекс по строке, индекс по столбцу
+    """
+def get_indexes_category_sheet(sheet, category_name):
+    start_indexes = get_indexes(sheet, category_name)
+    y = start_indexes[0]                                             #индекс строки
+    x = start_indexes[1]                                             #индекс столбца
+    dict_of = {}
+    temp = ''
+    for j in range(x+3, sheet.max_column):                      # сдвигаемся вправо на три элемента
           name = str(sheet[y][j].value).strip()
-          if (name == "None"): continue
           if (name != '' and name != temp):
-               if name == "НАПРАВЛЕНИЕ" or name == "ИНСТИТУТ": continue
+               # if name == "НАПРАВЛЕНИЕ" or name == "ИНСТИТУТ": continue
                #print('добавил:', name, '\nиндекс:', [y, j])
                dict_of[name] = [y, j]
           else:
                continue
           temp = name                                                 #сохраняем значение для проверки на объединенную ячейку
+    return dict_of
 
-     return dict_of
-
-# ФУНКЦИЯ ВЫДАЕТ СЛОВАРЬ {ОБРАЗОВАТЕЛЬНАЯ ПРОГРАММА : ИНДЕКС_ПО_СТРОКЕ, ИНДЕКС_ПО_СТОЛБЦУ}
-def get_indexes_of_edu_program(sheet, start_indexes):
-     ''' Данная функция предназначена для строки ОБРАЗОВАТЕЛЬНАЯ ПРОГРАММА.
-         Особенность в том, что в случае с объединенной ячейкой будем брать значение "сверху",
-         т.е. из НАПРАВЛЕНИЯ.
-     '''
-     y = start_indexes[0]  # индекс строки
-     x = start_indexes[1]  # индекс столбца
-     dict_of = {}
-     temp = '-1'
-     k = 0 #счетчик для проверки при вставке верхнего значения
-     for j in range(x+3, sheet.max_column-1):                            # тут костыль +3 пусть пока так
-          # у обр программы может быть и повторяющееся и пустое
-          # в случае с повторяющимся надо записывать первое
-          # в случае с пустым верхнее
-          name = str(sheet[y][j].value).strip()                   # удаляем лишние пробелы
-          if (name != '' and name != temp and name!="None"):
-               # print('добавил:', name, '\nиндекс:', [y, j])
-               dict_of[name] = [y, j]
-               temp = name                                            # сохраняем значение для проверки на объединенную ячейку
-          elif(name == temp):
-               continue
-          elif(name == '' or name == "None"):
-               name = str(sheet[y-1][j].value).strip()
-               if(name != temp):
-                    dict_of[name] = [y, j]
-                    temp = name
-     return dict_of
-
-# ФУНКЦИЯ ВЫДАЕТ СЛОВАРЬ {СЛЕД_НАПРАВЛЕНИЕ : ИНДЕКС_ПО_СТРОКЕ, ИНДЕКС_ПО_СТОЛБЦУ}
-def get_indexes_of_next_napr(dict_of_napr, name_napr):
-     # возвращает индекс следующего элемента, а если такового нет, то индекс самого себя
-     find = False
-     for key in dict_of_napr:
-          if key == name_napr:
-               find = True
-               continue
-          if find == True:
-               return dict_of_napr[key]
-     return dict_of_napr[name_napr]
+# Функция возвращает список элементов по любой категории относительно ВСЕГО файла(Институт/Направление/Образовательная программа)
+def get_list_category_file(wb, category_name):
+    n = len(wb.sheetnames)
+    list_cat = []
+    for i in range(n):
+        sheet = wb.worksheets[i]
+        dict_inst = get_indexes_category_sheet(sheet, category_name)
+        list_cat.append(list(dict_inst.keys()))
+    return list_cat
 
 
-def get_full_scd_by_napr(sheet, dict_of_napr, name_napr):
-    '''
-    Чтобы вывести расписание по направлению нам нужно:
-    - имя направления
-    - граничные индексы
-    - строка ответа
-    '''
 
-    answer = ''
-    # получаем граничные индексы
-    y = (dict_of_napr[name_napr])[0]
-    start_x = (dict_of_napr[name_napr])[1]
+path = get_file_path()
+first_open = False
+if (first_open):                # Если открываем первый раз, то обрабатываем таблицу и перезаписываем
+    unmerge_all_cells(path)
+wb = load_workbook(path)
 
-    next_idx = get_indexes_of_next_napr(dict_of_napr, name_napr)
-    end_x = next_idx[1]
-    if start_x == end_x: end_x = (sheet.max_column) # функция, выдающая следующий элемент, возвращает индекс себя самого, если он стоит в конце
-
-    nrows = sheet.max_row + 1  # количество строк(+1 тк нумерация с единицы)
-
-    gr = 1  # Счетчик групп
-    les = 1  # Счетчик пар
-    weekday = ""  # ДЕНЬ НЕДЕЛИ
-
-    # ПОКА БУДЕМ ВЫВОДИТЬ РАСПИСАНИЕ ПО КАЖДОМУ НАПРАВЛЕНИЮ ПО ОТДЕЛЬНОСТИ, Т.Е. ДРУГ ЗА ДРУГОМ ПРОПИСЫВАТЬ РАСПИСАНИЕ ПО ГРУППАМ(УЖАС!!!!)
-    for j in range(start_x, end_x):
-        answer = f"Расписание для {name_napr}4-{gr}\n"
-        print(f'Расписание для {name_napr}4 -{gr}')
-        gr += 1
-        for i in range(8, nrows):  # идем по строкам начиная с 3(тк пока не удалось удалить)
-
-            timing = sheet[i][2].value  # ВРЕМЯ ПАРЫ (если есть)
-            even_week = sheet[i][3].value  # ЧЕТНОСТЬ НЕДЕЛИ
-
-            subject = sheet[i][4].value  # НАЛИЧИЕ ЗАНЯТИЙ
-
-            if (sheet[i][1].value != "" and sheet[i][1].value != "None"):  # ДЕНЬ НЕДЕЛИ
-                les = 1  # возвращаем счетчик к 1
-                answer += "---------------------------\n"
-                print("---------------------------")
-                weekday = sheet[i][1].value
-                answer += f'{weekday}\n'
-                print(weekday)
-
-            if (timing != "" and timing != "None"):  # ВРЕМЯ (если есть то пишем)
-                answer += "-----\n"
-                print('-----')
-                answer += f'{les} пара {timing}\n'
-                print(les, 'пара ', timing)
-                les += 1
-
-            answer += f'{even_week}\n'
-            print(even_week)  # ЧЕТНОСТЬ НЕДЕЛИ
-
-            if (subject != "" and subject != "None"):  # НАЛИЧИЕ ЗАНЯТИЙ
-                answer += f'\t{subject}\n'
-                print('\t', subject)
-            else:
-                answer += f'\tНет занятий'
-                print('\t', "Нет занятий")
-
-            if (weekday == "СУББОТА" and even_week == "ЧЁТ."):
-                answer += '==================================================================================\n'
-                print("==================================================================================")
-                answer += 'Конец расписания.\n'
-                print("Конец расписания.")
-                break
-    return answer
-
-def get_scd_napr(sheet, dict_napr, name_napr):
-    # первое - получение граничных значений по направлению
-    y = (dict_napr[name_napr])[0] # строка
-    x = (dict_napr[name_napr])[1] # столбец
-    next_idxs = get_indexes_of_next_napr(dict_napr, name_napr)
-    end_x = next_idxs[1]
-
-    gr = 1  # Счетчик групп
-    num_lesson = 1  # Счетчик пар
-
-    if x == end_x:                  # функция, выдающая следующий элемент, возвращает индекс себя самого,
-        end_x = (sheet.max_column)  # если он стоит в конце
-
-    # идем по столбцам! записывая строки
-    for j in range(x, end_x):
-        for i in range(y, sheet.max_row+1):
-            week_day = sheet[i][1].value
-            time_pair = sheet[i][2].value
-            even_week = sheet[i][3].value
-
-            if(week_day != "None"):
-                print(f'День недели:{week_day}')
-            if(time_pair != "None"):
-                print(f'Пара №{num_lesson}. Время занятий: {time_pair}')
-            if(even_week != "None"):
-                print(f'Четность недели:{even_week}')
-
-
-wb = load_workbook('../files/raspisanie.xlsx')
 sheet = wb.active
-sheet = wb.worksheets[4]
-unmerge_all_cells(wb)
-# print(sheet.merged_cells.ranges)
-# set_merges = sorted(sheet.merged_cells.ranges.copy())
+sheet = wb.worksheets[0]
 
 
-#
-# for cell_group in set_merges:
-# 	min_col, min_row, max_col, max_row = range_boundaries(str(cell_group))
-# 	top_left_cell_value = sheet.cell(row=min_row, column=min_col).value
-# 	sheet.unmerge_cells(str(cell_group))
-# 	for row in sheet.iter_rows(min_col=min_col, min_row=min_row, max_col=max_col, max_row=max_row):
-# 		for cell in row:
-# 			cell.value = top_left_cell_value
-# wb.save("openpyxl_merge_unmerge.xlsx")
-# exit()
-#
+# full_inst_list = get_list_category_file(wb, 'ИНСТИТУТ')
+full_inst_list = wb.sheetnames
+
+n = len(full_inst_list)
+
+for i in range(n):                     # так надо
+    s = full_inst_list[i]
+    if s.find(',') != -1:
+        pieces = s.split(',')
+        full_inst_list.remove(s)
+        for i in pieces:
+            if i.find('4 курс')==-1:
+                i += ' 4 курс'
+            full_inst_list.append(i)
+    if s.startswith('3'):
+        full_inst_list.remove(s)
+
+print(full_inst_list)
+# full_edup_list = get_list_category_file(wb, 'Образовательная программа')
+
+# print(get_indexes(sheet, "НАПРАВЛЕНИЕ"))
+#print(get_indexes_category_sheet(sheet, get_indexes(sheet, 'НАПРАВЛЕНИЕ')))
+# print(get_list_category_file(wb, 'ИНСТИТУТ'))
+# list_inst = get_list_category_file(wb, 'НАПРАВЛЕНИЕ')
+# print(list_inst)
+
 
 
 # idx = get_indexes(sheet, 'ИНСТИТУТ')
 # # print(idx)
-# names_inst = get_indexes_of_category(sheet, idx)
-# # print(names_inst)
+# names_inst = get_indexes_category_sheet(sheet, idx)
+# print(names_inst)
 #
 # idx2 = get_indexes(sheet, 'НАПРАВЛЕНИЕ')
 # #print(idx2)
