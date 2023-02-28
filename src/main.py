@@ -1,6 +1,7 @@
 from openpyxl import *
 from openpyxl.utils import range_boundaries
 from pathlib import Path
+import time
 
 # Получение пути интересующего нас файла
 def get_file_path():
@@ -24,10 +25,53 @@ def unmerge_all_cells(path):
                 for cell in row:
                     cell.value = top_left_cell_value
         workbook.save(path)
-    exit()
+
+# Разделение институтов, хранящихся на одном листе
+def unmerge_institutes(path):
+    workbook = load_workbook(path)
+    for s in workbook.sheetnames:
+        if s.find(',') != -1:                           #название нашего листа 'ИУПСиБК, ИИС 4 курс'
+            sheet1 = workbook[s]
+
+            t = s.find('курс')-2                        #вычленяем курс из названия листа
+            z = s.find(',')                             #находим позицию запятой
+            fname = s[:z] + ' ' + s[t:]                 #иупсибк
+            sname = s[z+2:]                             #иис
+            # Теперь лист на котором мы были будет называться как sname, а новый как fname
+            sheet1.title = sname                        # переименовыем в ИИС 4 курс
+            workbook.create_sheet(fname)                # создаем лист ИУПСиБК 4 курс
+            workbook.save(path)                         # страхуемся, сохраняем наш док
 
 
-# ФУНКЦИЯ ВЫДАЕТ ИНДЕКС ЭЛЕМЕНТА ОТНОСИТЕЛЬНО ТАБЛИЦЫ
+            #переопределяем листы, так четче видно что где
+            sheet1 = workbook[sname]                    # иис тут заполнено
+            sheet2 = workbook[fname]                    # иупсибк тут пусто
+
+            inst_idx = next_idx(sheet1, 'ИНСТИТУТ')     # индекс с которого начинается второй институт(ИИС)
+
+            # заполняем новый лист(ИУПСиБК)
+            for i in range(1, sheet1.max_row):
+                for j in range(1, inst_idx[1]):
+                    sheet2.cell(i, j).value = sheet1.cell(i, j).value
+
+            # удлаляем ненужные столбцы с исходного листа
+            sheet1.delete_cols(idx=4, amount=(inst_idx[1]-4)) # тут пока костыль в виде 4 - именно столько столбцов нужно отступить слева
+                                                              # надо будет написать функцию добывающую этот индекс, чтобы было гибко
+            workbook.save(path)
+
+# Получение индекса последнего имени института/чего-то еще другого(для разъединения двух институтов на одном листе)
+def next_idx(sheet, category):
+    y, x = get_indexes(sheet, category) # строка, столбец
+    temp = sheet.cell(y, x).value
+    new_x = 0
+    # строка не меняется
+    for j in range(x, sheet.max_column):
+        if (sheet.cell(y,j).value != temp and sheet.cell(y,j).value != 'None'):
+            temp = sheet.cell(y,j).value
+            new_x = j
+    return (y, new_x)
+
+# Получение индекса(строка, столбец) относительно ячейки(для определения строки(столбца) с назв. институтов/направлений и др.
 def get_indexes(sheet, header_el):
      for i in range(1, sheet.max_row):
           for j in range(sheet.max_column):
@@ -35,10 +79,7 @@ def get_indexes(sheet, header_el):
                     #print(header_el, ' находится на (i, j): ', i , j, '\n')
                     return (i, j)
 
-"""
-        Функция возвращает словарь наименований относительно СТРАНИЦЫ
-        Название в категории(Институт/Направление/Образовательная программа) - индекс по строке, индекс по столбцу
-    """
+# Получение словаря {'название инст/напр': его индекс относительно талицы(строка, столбец)}
 def get_indexes_category_sheet(sheet, category_name):
     start_indexes = get_indexes(sheet, category_name)
     y = start_indexes[0]                                             #индекс строки
@@ -56,6 +97,7 @@ def get_indexes_category_sheet(sheet, category_name):
           temp = name                                                 #сохраняем значение для проверки на объединенную ячейку
     return dict_of
 
+# Бесполезная функция.
 # Функция возвращает список элементов по любой категории относительно ВСЕГО файла(Институт/Направление/Образовательная программа)
 def get_list_category_file(wb, category_name):
     n = len(wb.sheetnames)
@@ -67,60 +109,40 @@ def get_list_category_file(wb, category_name):
     return list_cat
 
 
-
+# Получаем путь к нашему файлу. Пригодится в дальнейшем, когда захотим выыводить разные курсы
 path = get_file_path()
-first_open = False
-if (first_open):                # Если открываем первый раз, то обрабатываем таблицу и перезаписываем
+
+"""
+1. Скачиваем файл с сайта
+2. Вызываем функцию по очистке объединенных ячеек (unmerge_all_cells)
+3. Вызываем функцию по разделению институтов, хранящихся на одном листе (unmerge_institutes)
+пока усе
+"""
+
+first_start = False
+if first_start:
     unmerge_all_cells(path)
+    # print('я отработал')
+    unmerge_institutes(path)
+    # print('и я тоже отработал')
+
 wb = load_workbook(path)
 
 sheet = wb.active
-sheet = wb.worksheets[0]
+sheet = wb.worksheets[2]
+
+# unmerge_institutes(path)
+
+# unmerge_institutes(path)
 
 
 # full_inst_list = get_list_category_file(wb, 'ИНСТИТУТ')
 full_inst_list = wb.sheetnames
 
-n = len(full_inst_list)
-
-for i in range(n):                     # так надо
-    s = full_inst_list[i]
-    if s.find(',') != -1:
-        pieces = s.split(',')
-        full_inst_list.remove(s)
-        for i in pieces:
-            if i.find('4 курс')==-1:
-                i += ' 4 курс'
-            full_inst_list.append(i)
-    if s.startswith('3'):
+# Почему-то в доке есть еще скрытый лист "3 курс"
+for s in full_inst_list:
+    if s.startswith('3') or s == 'None':
         full_inst_list.remove(s)
 
 print(full_inst_list)
-# full_edup_list = get_list_category_file(wb, 'Образовательная программа')
 
-# print(get_indexes(sheet, "НАПРАВЛЕНИЕ"))
-#print(get_indexes_category_sheet(sheet, get_indexes(sheet, 'НАПРАВЛЕНИЕ')))
-# print(get_list_category_file(wb, 'ИНСТИТУТ'))
-# list_inst = get_list_category_file(wb, 'НАПРАВЛЕНИЕ')
-# print(list_inst)
-
-
-
-# idx = get_indexes(sheet, 'ИНСТИТУТ')
-# # print(idx)
-# names_inst = get_indexes_category_sheet(sheet, idx)
-# print(names_inst)
-#
-# idx2 = get_indexes(sheet, 'НАПРАВЛЕНИЕ')
-# #print(idx2)
-# dict_napr = get_indexes_of_category(sheet, idx2)
-# #print(dict_napr)
-# next_napr_idx = get_indexes_of_next_napr(dict_napr, 'ГОСУДАРСТВЕННОЕ И МУНИЦИПАЛЬНОЕ УПРАВЛЕНИЕ')
-# #print(f'Индекс след. направления: {next_napr_idx}')
-# list_naprs = get_full_scd_by_napr(sheet, dict_napr, 'ГОСУДАРСТВЕННОЕ И МУНИЦИПАЛЬНОЕ УПРАВЛЕНИЕ')
-# #print(list_naprs)
-#
-# idx3 = get_indexes(sheet, 'Образовательная программа')
-# # print(idx3)
-# names_edup = get_indexes_of_edu_program(sheet, idx3)
-# # print(names_edup)
