@@ -1,7 +1,9 @@
 from openpyxl import *
 from openpyxl.utils import range_boundaries
 from pathlib import Path
+import selenium_fcs as sf
 import time
+
 
 # Получение пути интересующего нас файла
 def get_file_path():
@@ -61,52 +63,89 @@ def unmerge_institutes(path):
 
 # Получение индекса последнего имени института/чего-то еще другого(для разъединения двух институтов на одном листе)
 def next_idx(sheet, category):
-    y, x = get_indexes(sheet, category) # строка, столбец
-    temp = sheet.cell(y, x).value
-    new_x = 0
-    # строка не меняется
-    for j in range(x, sheet.max_column):
-        if (sheet.cell(y,j).value != temp and sheet.cell(y,j).value != 'None'):
-            temp = sheet.cell(y,j).value
-            new_x = j
-    return (y, new_x)
-
+        y, x = get_indexes(sheet, category) # строка, столбец
+        temp = sheet.cell(y, x).value
+        new_x = 0
+        # строка не меняется
+        for j in range(x, sheet.max_column):
+            if (sheet.cell(y,j).value != temp and sheet.cell(y,j).value != 'None'):
+                temp = sheet.cell(y,j).value
+                new_x = j
+        return (y, new_x)
 # Получение индекса(строка, столбец) относительно ячейки(для определения строки(столбца) с назв. институтов/направлений и др.
 def get_indexes(sheet, header_el):
-     for i in range(1, sheet.max_row):
-          for j in range(sheet.max_column):
-               if (sheet[i][j].value == header_el):
-                    #print(header_el, ' находится на (i, j): ', i , j, '\n')
-                    return (i, j)
+         for i in range(1, sheet.max_row):
+              for j in range(sheet.max_column):
+                   if (sheet[i][j].value == header_el):
+                        #print(header_el, ' находится на (i, j): ', i , j, '\n')
+                        return (i, j)
 
-# Получение словаря {'название инст/напр': его индекс относительно талицы(строка, столбец)}
-def get_indexes_category_sheet(sheet, category_name):
-    start_indexes = get_indexes(sheet, category_name)
-    y = start_indexes[0]                                             #индекс строки
-    x = start_indexes[1]                                             #индекс столбца
-    dict_of = {}
-    temp = ''
-    for j in range(x+3, sheet.max_column):                      # сдвигаемся вправо на три элемента
-          name = str(sheet[y][j].value).strip()
-          if (name != '' and name != temp):
-               # if name == "НАПРАВЛЕНИЕ" or name == "ИНСТИТУТ": continue
-               #print('добавил:', name, '\nиндекс:', [y, j])
-               dict_of[name] = [y, j]
-          else:
-               continue
-          temp = name                                                 #сохраняем значение для проверки на объединенную ячейку
-    return dict_of
 
-# Бесполезная функция.
-# Функция возвращает список элементов по любой категории относительно ВСЕГО файла(Институт/Направление/Образовательная программа)
-def get_list_category_file(wb, category_name):
-    n = len(wb.sheetnames)
-    list_cat = []
-    for i in range(n):
-        sheet = wb.worksheets[i]
-        dict_inst = get_indexes_category_sheet(sheet, category_name)
-        list_cat.append(list(dict_inst.keys()))
-    return list_cat
+class Direct:
+    path = ''
+    wb = ''
+    list_insts = '' #список институтов
+    inst = ''  #выбранный институт
+    list_napr = ''
+    dict_napr = ''
+    napr = ''
+
+    def set_path(self, path):
+        self.path = path
+        self.wb = load_workbook(path)
+
+    def set_inst(self, inst):
+        self.inst = inst
+
+    def set_napr(self, napr):
+        self.napr = napr
+
+    def get_list_inst(self):
+        full_inst_list = self.wb.sheetnames
+        # Иногда попадаются файлы с лишними страницами, тут их удаляем
+        for s in full_inst_list:
+            if s.startswith('3') or s == 'None':
+                full_inst_list.remove(s)
+        self.list_insts = full_inst_list
+
+
+    # Получение индекса последнего имени института/чего-то еще другого(для разъединения двух институтов на одном листе)
+    def next_idx(self, sheet, category):
+        y, x = get_indexes(sheet, category) # строка, столбец
+        temp = sheet.cell(y, x).value
+        new_x = 0
+        # строка не меняется
+        for j in range(x, sheet.max_column):
+            if (sheet.cell(y,j).value != temp and sheet.cell(y,j).value != 'None'):
+                temp = sheet.cell(y,j).value
+                new_x = j
+        return (y, new_x)
+
+    # Получение индекса(строка, столбец) относительно ячейки(для определения строки(столбца) с назв. институтов/направлений и др.
+    def get_indexes(self, sheet, header_el):
+         for i in range(1, sheet.max_row):
+              for j in range(sheet.max_column):
+                   if (sheet[i][j].value == header_el):
+                        #print(header_el, ' находится на (i, j): ', i , j, '\n')
+                        return (i, j)
+
+    # Получение словаря {'название инст/напр': его индекс относительно талицы(строка, столбец)}
+    def get_dict_napr(self):
+        sheet = self.wb[self.inst]
+        start_indexes = get_indexes(sheet, 'НАПРАВЛЕНИЕ')
+        y = start_indexes[0]                                             #индекс строки
+        x = start_indexes[1]                                             #индекс столбца
+        dict_of = {}
+        temp = ''
+        for j in range(x+3, sheet.max_column):                      # сдвигаемся вправо на три элемента
+              name = str(sheet[y][j].value).strip()
+              if (name != '' and name != temp):
+                   dict_of[name] = [y, j]
+              else:
+                   continue
+              temp = name                                                 #сохраняем значение для проверки на объединенную ячейку
+        self.dict_napr = dict_of
+        self.list_napr = list(dict_of.keys())
 
 
 # Получаем путь к нашему файлу. Пригодится в дальнейшем, когда захотим выыводить разные курсы
@@ -120,29 +159,50 @@ path = get_file_path()
 """
 
 first_start = False
-if first_start:
+def first_start():
+    sf.get_file()
+    path = get_file_path()
     unmerge_all_cells(path)
-    # print('я отработал')
     unmerge_institutes(path)
-    # print('и я тоже отработал')
+    return path
 
-wb = load_workbook(path)
+# obj = Direct()
+# obj.set_path('/Users/katherine.marakhova/PycharmProjects/exampleBot/files/4-курс-бакалавриат-ОФО-42.xlsx')
+#
+# obj.get_list_inst()
+# print(obj.list_insts)
+#
+# obj.set_inst('ИГУиП 4 курс')
+# print(obj.inst)
+#
+# obj.get_dict_napr()
+# print(obj.list_napr)
 
-sheet = wb.active
-sheet = wb.worksheets[2]
-
-# unmerge_institutes(path)
-
-# unmerge_institutes(path)
 
 
-# full_inst_list = get_list_category_file(wb, 'ИНСТИТУТ')
-full_inst_list = wb.sheetnames
+# # Список институтов
+# full_inst_list = wb.sheetnames
+# # Иногда попадаются файлы с лишними страницами, тут их удаляем
+# for s in full_inst_list:
+#     if s.startswith('3') or s == 'None':
+#         full_inst_list.remove(s)
+# print(full_inst_list)
+#
+# # get_indexes_category_sheet(wb, inst, 'НАПРАВЛЕНИЕ')
 
-# Почему-то в доке есть еще скрытый лист "3 курс"
-for s in full_inst_list:
-    if s.startswith('3') or s == 'None':
-        full_inst_list.remove(s)
 
-print(full_inst_list)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
