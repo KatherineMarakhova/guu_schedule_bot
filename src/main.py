@@ -8,7 +8,7 @@ import time
 # Получение пути интересующего нас файла
 def get_file_path():
     with Path(r"/Users/katherine.marakhova/PycharmProjects/exampleBot/files") as direction:
-        for f in direction.glob("4-курс-бакалавриат*.xlsx"):
+        for f in direction.glob("3-курс-бакалавриат*.xlsx"):
             #print(f'ya nashelsya: {f}')
             return f
 
@@ -43,7 +43,6 @@ def unmerge_institutes(path):
             sheet1.title = sname                        # переименовыем в ИИС 4 курс
             workbook.create_sheet(fname)                # создаем лист ИУПСиБК 4 курс
             workbook.save(path)                         # страхуемся, сохраняем наш док
-
 
             #переопределяем листы, так четче видно что где
             sheet1 = workbook[sname]                    # иис тут заполнено
@@ -166,17 +165,17 @@ def first_start():
     unmerge_institutes(path)
     return path
 
-# obj = Direct()
-# obj.set_path('/Users/katherine.marakhova/PycharmProjects/exampleBot/files/4-курс-бакалавриат-ОФО-42.xlsx')
-#
-# obj.get_list_inst()
-# print(obj.list_insts)
-#
-# obj.set_inst('ИГУиП 4 курс')
-# print(obj.inst)
-#
-# obj.get_dict_napr()
-# print(obj.list_napr)
+obj = Direct()
+# first_start()
+obj.set_path('/Users/katherine.marakhova/PycharmProjects/exampleBot/files/3-курс-бакалавриат-ОФО-50.xlsx')
+obj.get_list_inst()
+print(obj.list_insts)
+
+obj.set_inst('ИГУиП 3 курс')
+print(obj.inst)
+
+obj.get_dict_napr()
+print(obj.list_napr)
 
 
 

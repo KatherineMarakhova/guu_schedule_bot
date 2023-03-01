@@ -13,7 +13,7 @@ def get_file():
     driver.get('https://guu.ru/студентам/расписание-сессий/schedule/')
     time.sleep(3)
     # селекторы надо обязательно переписать!!!!!!!!!!!
-    driver.get("https://guu.ru/wp-content/uploads/4-курс-бакалавриат-ОФО-42.xlsx")
-    #driver.get('https://guu.ru/wp-content/uploads/3-курс-бакалавриат-ОФО-50.xlsx') #файл третьего курса
+    # driver.get("https://guu.ru/wp-content/uploads/4-курс-бакалавриат-ОФО-42.xlsx")
+    driver.get('https://guu.ru/wp-content/uploads/3-курс-бакалавриат-ОФО-50.xlsx') #файл третьего курса
     time.sleep(3)
     driver.quit()
