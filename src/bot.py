@@ -1,7 +1,7 @@
 import config as cf
 import telebot
 from telebot import types
-from telebot.types import InlineKeyboardButton
+
 
 from main import *
 
@@ -25,7 +25,7 @@ def button_message(message):
 
     bot.send_message(message.chat.id,'Привет! \nЯ бот-хранитель твоего распиания! \nДля начала, нужно выбрать институт', reply_markup = markup)
 
-@bot.message_handler(content_types='text')
+@bot.message_handler(content_types=['text'])
 def message_reply(message):
 
     if message.text == "Выбрать институт":
@@ -42,8 +42,9 @@ def message_reply(message):
 @bot.callback_query_handler(func=lambda call:True)
 def callback_query(call):
     req = call.data.split('_')
-    # список листов full_inst_list
-    if req[0] in my_direct.list_insts:  # получили название института
+
+    # если получили название института
+    if req[0] in my_direct.list_insts:
 
         markup = types.InlineKeyboardMarkup()
 
@@ -52,7 +53,6 @@ def callback_query(call):
 
         for name in my_direct.list_napr:
             if name == 'None':continue
-
             if len(name) > 32:          # колбек не поддерживает текст больше 32 символов, поэтому его нужно обрезать
                 btn = types.InlineKeyboardButton(text = name, callback_data = name[:33])
                 markup.add(btn)
@@ -62,12 +62,19 @@ def callback_query(call):
         m = "Направления " + req[0] + ":"
         bot.send_message(call.message.chat.id, m, reply_markup=markup)
 
-    if req[0] in my_direct.list_napr:
+    # if req[0] in my_direct.list_napr or check_name_in_list(req[0], my_direct.list_napr): #вторая проверка для укороченных названий
+    if my_direct.check_name_in_list(req[0], my_direct.list_napr): #вторая проверка для укороченных названий
         bot.send_message(call.message.chat.id, "Отлично! Теперь нужно выбрать группу")
-        my_direct.set_path(req[0])
+        my_direct.set_napr(req[0])
+        my_direct.get_list_group()  # формируем лист групп
+
+        markup = types.InlineKeyboardMarkup()
+
+        for group in my_direct.list_groups:
+            btn = types.InlineKeyboardButton(text = str(group), callback_data = str(group))
+            markup.add(btn)
+        bot.send_message(call.message.chat.id, "Отлично! Теперь нужно выбрать группу", reply_markup = markup)
 
 
-    if req[0] == 'unseen':
-        bot.delete_message(call.message.chat.id, call.message.message_id)
 
 bot.infinity_polling()
