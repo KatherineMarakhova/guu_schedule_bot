@@ -51,13 +51,14 @@ def unmerge_institutes(path):
             last_inst_name = ''
             y, x = get_indexes(sheet1, 'ИНСТИТУТ')
             for i in range(1, sheet1.max_column):
-                val = sheet1[y][i].value
+                # val = sheet1[y][i].value
+                val = sheet1.cell(y, i).value
                 if val != 'None':
                     last_inst_name = val
 
             inst_idx = get_indexes(sheet1, last_inst_name)     # индекс с которого начинается второй институт(ИИС)
 
-            print(f'Пследний институт {last_inst_name}, индексы {inst_idx}')
+            print(f'Последний институт {last_inst_name}, находится {inst_idx}')
 
             # заполняем новый лист(ИУПСиБК)
             for i in range(1, sheet1.max_row):
@@ -72,19 +73,24 @@ def unmerge_institutes(path):
 # Получение индекса(строка, столбец) относительно ячейки(для определения строки(столбца) с назв. институтов/направлений и др.
 def get_indexes(sheet, header_el):
     for i in range(1, sheet.max_row):
-        for j in range(sheet.max_column):
-            val = str(sheet[i][j].value)
+        for j in range(1, sheet.max_column):
+            # val = str(sheet[i][j].value)
+            val = str(sheet.cell(i,j).value)
             if (val == header_el or val.find(header_el) != -1):
                 return (i, j)
 
-# Получение индекса последнего имени института/чего-то еще другого(для разъединения двух институтов на одном листе)
+# Получение индекса другого элемента(не равного по названию)
 def next_idx(sheet, name_el):
     y, x = get_indexes(sheet, name_el)          # строка, столбец
     for j in range(x, sheet.max_column):        # строка не меняется
-        val = str(sheet[y][j].value)
-        if val == name_el or val.find(name_el):
-            continue
-        elif (val != 'None'):                   # в этом условии мы находим другое название и возвращаем его координаты
+        # val = str(sheet[y][j].value)
+        val = str(sheet.cell(row = y, column = j).value)
+        print(val)
+        # if val == name_el or val.find(name_el)==-1 or val == 'None':
+        #     continue
+        # else:                   # в этом условии мы находим другое название и возвращаем его координаты
+        #     return (y, j)
+        if val != name_el and val != 'None':
             return (y, j)
 
 
@@ -120,14 +126,16 @@ class Direct:
 
     # Получение словаря {'название инст/напр': его индекс относительно талицы(строка, столбец)}
     def get_dict_napr(self):
-        start_indexes = get_indexes(self.sheet, 'НАПРАВЛЕНИЕ')
-        y = start_indexes[0]                                             #индекс строки
-        x = start_indexes[1]                                             #индекс столбца
+        # 1. определяем строку с направлениями
+        # 2. определяем столбец с которого начинаются наименования
+        y = (get_indexes(self.sheet, 'НАПРАВЛЕНИЕ'))[0]                  #индекс строки
+        x = (next_idx(self.sheet, 'НАПРАВЛЕНИЕ'))[1]                     #индекс столбца
         dict_of = {}
         temp = ''
-        for j in range(x+3, self.sheet.max_column):                           # сдвигаемся вправо на два элемента(ЭТО НАДО ИСПРАВИТЬ)
-              name = str(self.sheet[y][j].value).strip()
-              if name == 'НАПРАВЛЕНИЕ': continue
+        for j in range(x, self.sheet.max_column):                           # сдвигаемся вправо на два элемента(ЭТО НАДО ИСПРАВИТЬ)
+              # name = str(self.sheet[y][j].value).strip()
+              name = str(self.sheet.cell(y,j).value).strip()
+              # if name == 'НАПРАВЛЕНИЕ': continue
               if (name != '' and name != temp):
                    dict_of[name] = [y, j]
               else:
@@ -174,14 +182,17 @@ def first_start(course):
     return path
 
 obj = Direct()
-course = 4
+course = 3
 
 path = first_start(course)
+# path = '/Users/katherine.marakhova/PycharmProjects/exampleBot/files/4-курс-бакалавриат-ОФО-42.xlsx'
 obj.set_path(path)
 obj.get_list_inst()
 print(f'obj.list_insts: {obj.list_insts}')
-obj.set_inst('ИИС 4 курс ')
+obj.set_inst('ИИС 3 курс ')
 print(f'obj.inst: {obj.inst}')
+# print(get_indexes(obj.sheet, 'День'))
+# print(next_idx(obj.sheet, 'День'))
 
 obj.get_dict_napr()         # запрашиваем направления относительно института
 print(f"obj.dict_napr: {obj.dict_napr}")
