@@ -58,7 +58,7 @@ def unmerge_institutes(path):
 
             inst_idx = get_indexes(sheet1, last_inst_name)     # индекс с которого начинается второй институт(ИИС)
 
-            print(f'Последний институт {last_inst_name}, находится {inst_idx}')
+            # print(f'Последний институт {last_inst_name}, находится {inst_idx}')
 
             # заполняем новый лист(ИУПСиБК)
             for i in range(1, sheet1.max_row):
@@ -74,24 +74,18 @@ def unmerge_institutes(path):
 def get_indexes(sheet, header_el):
     for i in range(1, sheet.max_row):
         for j in range(1, sheet.max_column):
-            # val = str(sheet[i][j].value)
             val = str(sheet.cell(i,j).value)
             if (val == header_el or val.find(header_el) != -1):
                 return (i, j)
 
 # Получение индекса другого элемента(не равного по названию)
 def next_idx(sheet, name_el):
-    y, x = get_indexes(sheet, name_el)          # строка, столбец
+    y, x = get_indexes(sheet, name_el)          # строка, столбец начала
     for j in range(x, sheet.max_column):        # строка не меняется
-        # val = str(sheet[y][j].value)
         val = str(sheet.cell(row = y, column = j).value)
-        print(val)
-        # if val == name_el or val.find(name_el)==-1 or val == 'None':
-        #     continue
-        # else:                   # в этом условии мы находим другое название и возвращаем его координаты
-        #     return (y, j)
-        if val != name_el and val != 'None':
+        if val != name_el and val != 'None' and val.find(name_el) == -1:
             return (y, j)
+    return (y, j+1)                             #значит он последний
 
 
 class Direct:
@@ -132,11 +126,11 @@ class Direct:
         x = (next_idx(self.sheet, 'НАПРАВЛЕНИЕ'))[1]                     #индекс столбца
         dict_of = {}
         temp = ''
-        for j in range(x, self.sheet.max_column):                           # сдвигаемся вправо на два элемента(ЭТО НАДО ИСПРАВИТЬ)
-              # name = str(self.sheet[y][j].value).strip()
+        for j in range(x, self.sheet.max_column+1):                           # сдвигаемся вправо на два элемента(ЭТО НАДО ИСПРАВИТЬ)
+
               name = str(self.sheet.cell(y,j).value).strip()
-              # if name == 'НАПРАВЛЕНИЕ': continue
-              if (name != '' and name != temp):
+
+              if (name != '' and name != temp and name!='None'):
                    dict_of[name] = [y, j]
               else:
                    continue
@@ -153,7 +147,7 @@ class Direct:
         e_idx = (next_idx(self.sheet, self.napr))[1]                # конец(столбец)
         groups = []
         for i in range(s_idx, e_idx):
-            groups.append(self.sheet[g_idx][i].value)
+            groups.append(self.sheet.cell(row = g_idx, column=i).value)
         self.list_groups = groups
 
     def check_name_in_list(self, name, somelist):
@@ -197,7 +191,10 @@ print(f'obj.inst: {obj.inst}')
 obj.get_dict_napr()         # запрашиваем направления относительно института
 print(f"obj.dict_napr: {obj.dict_napr}")
 print(f"obj.list_napr: {obj.list_napr}")
-# obj.set_napr('')
+obj.set_napr('ПРИКЛАДНАЯ ИНФОРМАТИКА')
+obj.get_list_group()
+print(f'obj.list_groups: {obj.list_groups}')
+
 
 
 

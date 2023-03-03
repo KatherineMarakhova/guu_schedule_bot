@@ -64,7 +64,6 @@ def callback_query(call):
 
     # if req[0] in my_direct.list_napr or check_name_in_list(req[0], my_direct.list_napr): #вторая проверка для укороченных названий
     if my_direct.check_name_in_list(req[0], my_direct.list_napr): #вторая проверка для укороченных названий
-        bot.send_message(call.message.chat.id, "Отлично! Теперь нужно выбрать группу")
         my_direct.set_napr(req[0])
         my_direct.get_list_group()  # формируем лист групп
 
