@@ -1,27 +1,21 @@
 import config as cf
 import telebot
 from telebot import types
+from Direct import *
 
-
-from main import *
-
-# token = '5679216888:AAEnHl7wKQmR4mXwrqWQQIVGVztbqtINeBQ'
 bot = telebot.TeleBot(cf.token)
 
-# @bot.message_handler(commands=['start'])
-# def start_message(message):
-#     bot.send_message(message.chat.id,'Привет')
+my_direct = Direct(2)              #создаем объект нашего класса
 
-my_direct = Direct()
 
 @bot.message_handler(commands=['start'])
 def button_message(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+
     item2 = types.KeyboardButton("Выбрать институт")
     markup.add(item2)
-
-    # path = first_start()        #это запустит селениум и скачает файл это очень долго, надо что-то другое
-    my_direct.set_path('/Users/katherine.marakhova/PycharmProjects/exampleBot/files/3-курс-бакалавриат-ОФО-50.xlsx')    #передаем нашему объекту путь к обработанному файлу
+    if my_direct.first_start:
+        my_direct.first_start()
 
     bot.send_message(message.chat.id,'Привет! \nЯ бот-хранитель твоего распиания! \nДля начала, нужно выбрать институт', reply_markup = markup)
 
