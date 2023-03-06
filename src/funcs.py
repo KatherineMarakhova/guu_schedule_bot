@@ -108,6 +108,7 @@ def get_full_scd_by_napr(sheet, dict_of_napr, name_napr):
                 break
     return answer
 
+
 def get_scd_napr(sheet, dict_napr, name_napr):
     # первое - получение граничных значений по направлению
     y = (dict_napr[name_napr])[0] # строка

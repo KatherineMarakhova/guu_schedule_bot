@@ -13,7 +13,7 @@ def get_file(course):
     driver = webdriver.Chrome(options=options)
 
     driver.get('https://guu.ru/студентам/расписание-сессий/schedule/')
-    time.sleep(3)
+    time.sleep(1)
     # селекторы надо обязательно переписать!!!!!!!!!!!
     if (course == 4):
         driver.get("https://guu.ru/wp-content/uploads/4-курс-бакалавриат-ОФО-42.xlsx")
@@ -25,6 +25,5 @@ def get_file(course):
     if (course == 1):
         driver.get('https://guu.ru/wp-content/uploads/1-курс-бакалавриат-ОФО-48.xlsx')
 
-
-    time.sleep(2)
+    time.sleep(1)
     driver.quit()

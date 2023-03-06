@@ -9,14 +9,18 @@ class Direct:
     path = ''
     wb = ''
     sheet = ''
-    list_insts = ''         #список институтов
-    inst = ''               #выбранный институт
+    list_insts = ''         # список институтов
+    inst = ''               # выбранный институт
     list_napr = ''
     dict_napr = ''
     napr = ''
     list_groups = ''
+    group = ''
 
-    def __init__(self, course):
+    def set_path(self, path):
+        self.path = path
+
+    def set_course(self, course):
         self.course = course
 
     def set_inst(self, inst):
@@ -25,6 +29,9 @@ class Direct:
 
     def set_napr(self, napr):
         self.napr = napr
+
+    def set_group(self, group):
+        self.group = group
 
     def get_list_inst(self):
         full_inst_list = self.wb.sheetnames
@@ -63,7 +70,9 @@ class Direct:
         e_idx = (self.next_idx(self.sheet, self.napr))[1]                # конец(столбец)
         groups = []
         for i in range(s_idx, e_idx):
-            groups.append(self.sheet.cell(row = g_idx, column = i).value)
+            group = self.sheet.cell(row = g_idx, column = i).value
+            if group == "None": continue
+            groups.append(group)
         self.list_groups = groups
 
     def check_name_in_list(self, name, somelist):
@@ -72,7 +81,7 @@ class Direct:
                 return True
         return False
 
-    #  БЛОК ПОЛУЧЕНИЯ И ОБРАБОТКИ ФАЙЛА
+    #  БЛОК ПОЛУЧЕНИЯ И ОБРАБОТКИ ФАЙЛА ==========================================================
     def first_start(self):
         sf.get_file(self.course)                     # скачиваем файл с сайта относительно курса
         self.path = self.get_file_path()             # записываем путь скачанного файла
@@ -143,13 +152,13 @@ class Direct:
                     for j in range(1, inst_idx[1]):
                         sheet2.cell(i, j).value = sheet1.cell(i, j).value
 
+                print(f'inst_idx[1]: {inst_idx[1]}')
                 # удлаляем ненужные столбцы с исходного листа
-                sheet1.delete_cols(idx=4, amount=(inst_idx[
-                                                      1] - 4))  # тут пока костыль в виде 4 - именно столько столбцов нужно отступить слева
+                sheet1.delete_cols(idx=5, amount=(inst_idx[1] - 5))  # тут пока костыль в виде 4 - именно столько столбцов нужно отступить слева
                 # надо будет написать функцию добывающую этот индекс, чтобы было гибко
                 workbook.save(self.path)
 
-    # Получение индекса(строка, столбец) относительно ячейки(для определения строки(столбца) с назв. институтов/направлений и др.
+    # Получение индекса(строка, столбец) относительно содержимого ячейки
     def get_indexes(self, sheet, header_el):
         for i in range(1, sheet.max_row):
             for j in range(1, sheet.max_column):
@@ -165,3 +174,43 @@ class Direct:
             if val != name_el and val != 'None' and val.find(name_el) == -1:
                 return (y, j)
         return (y, sheet.max_column+1)  # значит он последний
+
+    # БЛОК ВЫВОДА РАСПИСАНИЯ ======================================================================
+    def get_full_scd(self):
+        answer = f'Расписание для {self.napr} {self.course}-{self.group}\n'
+        # получаем граничные индексы
+        r, c = self.get_indexes(self.sheet, self.napr)  # row = 5, coll = 4
+        group = 1
+        c = c + group - 1  # перезаписываем столбец на новое значение
+
+        temp = ''
+        for i in range(9, self.sheet.max_row):
+
+            if (str(self.sheet.cell(i, 2).value) == 'None'): break
+
+            day = str(self.sheet.cell(i, 2).value)
+            time = str(self.sheet.cell(i, 3).value)
+            even = str(self.sheet.cell(i, 4).value)
+            sbj = str(self.sheet.cell(i, c).value)
+
+            dash = '--------------------------------------️'
+
+            if temp != str(self.sheet.cell(i, 2).value):
+                spaces = ''
+                n = len(dash) - len('❗️' + day + '❗️') - 1
+                for i in range(n):
+                    spaces += ' '
+                answer += f'{dash}\n❗️' + day + '❗' + spaces + '|' + f'️\n{dash}\n'
+                lesson = 1
+                answer += (f'{lesson}📍' + time + '\n')
+                temp = day
+                lesson += 1
+
+            if i % 2 != 0:
+                answer += (f'{lesson}📍' + time + '\n- ' + even + sbj + '\n\n')
+                lesson += 1
+            else:
+                answer += ('- ' + even + sbj + '\n\n')
+
+        print(answer)
+        return answer
