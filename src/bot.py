@@ -130,7 +130,7 @@ def callback_query(call):
     print(f'req[0]: {req[0]=="group"}')
     # получили группу
     if req[0][1:] == 'group':
-        # bot.delete_message(call.message.chat.id, call.message.message_id)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
         my_direct.set_group(my_direct.list_groups[int(req[0][:1])])
 
         bot.send_message(call.message.chat.id, "Настройка завершена!✅\n"
@@ -149,12 +149,16 @@ def callback_query(call):
         bot.send_message(call.message.chat.id, "Выбери формат вывода расписания: \n", reply_markup = markup)
 
     if str(req[0]) == 'fullscd':
-        answer = my_direct.get_full_scd()
+        answer = my_direct.get_scd_full()
         bot.send_message(call.message.chat.id, answer)
     if req[0] == 'evenscd':
-        pass
+        answer = my_direct.get_scd_even(eveness="ЧЁТ.")
+        bot.send_message(call.message.chat.id, answer)
+
     if req[0] == 'oddscd':
-        pass
+        answer = my_direct.get_scd_even(eveness="НЕЧЁТ.")
+        bot.send_message(call.message.chat.id, answer)
+
     if req[0] == 'weekdayscd':
         pass
 

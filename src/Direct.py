@@ -224,7 +224,7 @@ class Direct:
         return (y, sheet.max_column+1)  # значит он последний
 
     # БЛОК ВЫВОДА РАСПИСАНИЯ ======================================================================
-    def get_full_scd(self):
+    def get_scd_full(self):
         answer = f'Расписание для {self.edup} {self.course}-{self.group}\n'
         # получаем граничные индексы
         r, c = self.get_indexes_cat(self.sheet, self.edup)  # row = 5, coll = 4
@@ -250,16 +250,55 @@ class Direct:
                 n = len(dash) - len('❗️' + day + '❗️') - 1
                 for i in range(n):
                     spaces += ' '
-                answer += f'{dash}\n❗️' + day + '❗' + spaces + '|' + f'️\n{dash}\n'
+                answer += f'{dash}\n❗️{day}❗{spaces}|️\n{dash}\n'
                 lesson = 1
-                answer += (f'{lesson}📍' + time + '\n')
+                answer += (f'{lesson}📍{time}\n')
                 temp = day
                 lesson += 1
 
             if i % 2 != 0:
-                answer += (f'{lesson}📍' + time + '\n- ' + even + " " + sbj + '\n\n')
+                answer += (f'{lesson}📍{time}\n- {even} {sbj}\n\n')
                 lesson += 1
             else:
-                answer += ('- ' + even + " " + sbj + '\n\n')
+                answer += (f'- {even} {sbj}\n\n')
 
         return answer
+
+    def get_scd_even(self, eveness="ЧЁТ."):
+        answer = f'Расписание для {self.edup} {self.course}-{self.group}\n'
+        answer += f'{eveness.lower()} неделя\n'
+        # получаем граничные индексы
+        r, c = self.get_indexes_cat(self.sheet, self.edup)  # row = 5, coll = 4
+
+        c = c + int(self.group) - 1  # перезаписываем столбец на новое значение
+
+        temp = ''
+        lesson = ''
+        for i in range(9, self.sheet.max_row):
+
+            if (str(self.sheet.cell(i, 2).value) == 'None'): break
+
+            day = str(self.sheet.cell(i, 2).value)
+            time = str(self.sheet.cell(i, 3).value)
+            even = str(self.sheet.cell(i, 4).value)
+            sbj = str(self.sheet.cell(i, c).value)
+            if sbj == 'None': sbj = 'Занятий нет'
+
+            dash = '--------------------------------------️'
+
+            if temp != str(self.sheet.cell(i, 2).value):
+                spaces = ''
+                n = len(dash) - len('❗️' + day + '❗️') - 1
+                for i in range(n):
+                    spaces += ' '
+                answer += f'{dash}\n❗️{day}❗{spaces}|️\n{dash}\n'
+                lesson = 1
+                temp = day
+
+            if even.strip().lower() == eveness.strip().lower():
+                answer += (f'{lesson}📍{time}\n{sbj}\n\n')
+                lesson += 1
+
+
+        return answer
+
