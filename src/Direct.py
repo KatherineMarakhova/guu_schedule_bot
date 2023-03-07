@@ -111,7 +111,6 @@ class Direct:
         # print(f'path: {self.path}')
         self.wb = load_workbook(self.path)
 
-
     def clean_all(self):
         self.path = ''
         self.wb = ''
@@ -124,7 +123,6 @@ class Direct:
         self.napr = ''
         self.list_groups = ''
         self.group = ''
-
 
     # Получение пути интересующего нас файла
     def get_file_path(self):

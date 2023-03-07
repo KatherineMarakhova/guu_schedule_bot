@@ -2,7 +2,7 @@ import config as cf
 import telebot
 from telebot import types
 from Direct import *
-import time
+
 
 bot = telebot.TeleBot(cf.token)
 
@@ -117,7 +117,6 @@ def callback_query(call):
 
         markup = types.InlineKeyboardMarkup()
 
-        print(f'list_groups {my_direct.list_groups}')
         i = 0
         for group in my_direct.list_groups:
             if str(group) == 'None': continue
@@ -127,23 +126,36 @@ def callback_query(call):
             markup.add(btn)
         bot.send_message(call.message.chat.id, "Отлично! Теперь нужно выбрать группу", reply_markup = markup)
 
+    print(f'req[0]: {req[0]}')
+    print(f'req[0]: {req[0]=="group"}')
     # получили группу
     if req[0][1:] == 'group':
         # bot.delete_message(call.message.chat.id, call.message.message_id)
         my_direct.set_group(my_direct.list_groups[int(req[0][:1])])
 
-        markup = types.InlineKeyboardMarkup()
-        btn1 = types.InlineKeyboardButton('расписание целиком', callback_data='full_scd')
-        btn2 = types.InlineKeyboardButton('расписание четной недели', callback_data='even_scd')
-        btn3 = types.InlineKeyboardButton('расписание нечетной недели', callback_data='odd_scd')
-        btn4 = types.InlineKeyboardButton('расписание по дням', callback_data='week_day_scd')
-        markup.add(btn1, btn2, btn3, btn4)
-
         bot.send_message(call.message.chat.id, "Настройка завершена!✅\n"
                                                f"Курс: {my_direct.course} \n"
                                                f"Направление подготовки: {my_direct.napr} \n"
                                                f"Образовательная программа: {my_direct.edup} \n"
-                                               f"Группа: {my_direct.group} \n"
-                                               "Выбери формат вывода расписания: \n", reply_markup=markup)
+                                               f"Группа: {my_direct.group} \n")
+
+        markup = types.InlineKeyboardMarkup(row_width=1)
+        btn1 = types.InlineKeyboardButton('расписание целиком', callback_data='fullscd')
+        btn2 = types.InlineKeyboardButton('расписание четной недели', callback_data='evenscd')
+        btn3 = types.InlineKeyboardButton('расписание нечетной недели', callback_data='oddscd')
+        btn4 = types.InlineKeyboardButton('расписание по дням', callback_data='weekdayscd')
+        markup.add(btn1, btn2, btn3, btn4)
+
+        bot.send_message(call.message.chat.id, "Выбери формат вывода расписания: \n", reply_markup = markup)
+
+    if str(req[0]) == 'fullscd':
+        answer = my_direct.get_full_scd()
+        bot.send_message(call.message.chat.id, answer)
+    if req[0] == 'evenscd':
+        pass
+    if req[0] == 'oddscd':
+        pass
+    if req[0] == 'weekdayscd':
+        pass
 
 bot.infinity_polling()
