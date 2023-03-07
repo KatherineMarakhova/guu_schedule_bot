@@ -197,28 +197,30 @@ class Direct:
 
     # Получение индекса(строка, столбец) относительно содержимого ячейки
     def get_indexes(self, sheet, header_el):
-        header_el = header_el.lower()
+        header_el = (header_el.strip()).lower()
         for i in range(1, sheet.max_row):
             for j in range(1, sheet.max_column):
-                val = str(sheet.cell(i, j).value).lower()
-                if (val == header_el or val.find(header_el) != -1):
+                val = (str(sheet.cell(i, j).value).strip()).lower()
+                # if (val == header_el or val.find(header_el) != -1):
+                if (val == header_el):
                     return (i, j)
 
     # делает то же самое что и get_indexes только с понижением строки
     def get_indexes_cat(self, sheet, header_el, cat = 'Образовательная программа'):
-        header_el = header_el.lower()
+        header_el = (header_el.strip()).lower()
         y, x = self.get_indexes(self.sheet, cat)    # нам нужна только строка! те у
         for i in range(y, sheet.max_row):
             for j in range(1, sheet.max_column):
-                val = str(sheet.cell(i, j).value).lower()
+                val = str(sheet.cell(i, j).value).strip().lower()
                 if (val == header_el or val.find(header_el) != -1):
                     return (i, j)
 
     # Получение индекса другого элемента(не равного по названию)
     def next_idx(self, sheet, name_el):
+        name_el = name_el.strip().lower()
         y, x = self.get_indexes(sheet, name_el)  # строка, столбец начала
         for j in range(x, sheet.max_column):  # строка не меняется
-            val = str(sheet.cell(row=y, column=j).value)
+            val = str(sheet.cell(row=y, column=j).value).strip().lower()
             if val != name_el and val != 'None' and val.find(name_el) == -1:
                 return (y, j)
         return (y, sheet.max_column+1)  # значит он последний
@@ -262,5 +264,4 @@ class Direct:
             else:
                 answer += ('- ' + even + " " + sbj + '\n\n')
 
-        # print(answer)
         return answer

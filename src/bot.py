@@ -125,14 +125,24 @@ def callback_query(call):
 
     # получили группу
     if req[0] in str(my_direct.list_groups):
-        bot.delete_message(call.message.chat.id, call.message.message_id)
+        # bot.delete_message(call.message.chat.id, call.message.message_id)
         my_direct.set_group(req[0])
-        bot.send_message(call.message.chat.id, "Настройка завершена!\n"
-                                               f"{my_direct.napr} {my_direct.edup} {my_direct.group}\n"
-                                               "Выбери способ вывода расписания:\n"
-                                               "- расписание целиком /full \n"
-                                               "- расписание четной недели \n"
-                                               "- расписание нечетной недели \n"
-                                               "- расписание по дням недели \n")
+
+        markup = types.InlineKeyboardMarkup()
+        btn1 = types.InlineKeyboardButton(call.message.chat.id, 'расписание целиком', callback_data='full_scd')
+        btn2 = types.InlineKeyboardButton(call.message.chat.id, 'расписание четной недели', callback_data='even_scd')
+        btn3 = types.InlineKeyboardButton(call.message.chat.id, 'расписание нечетной недели', callback_data='odd_scd')
+        btn4 = types.InlineKeyboardButton(call.message.chat.id, 'расписание по дням', callback_data='week_day_scd')
+        markup.add(btn1, btn2, btn3, btn4)
+
+        bot.send_message(call.message.chat.id, "Настройка завершена!✅\n"
+                                               f"Курс: {my_direct.course} \n"
+                                               f"Направление подготовки: {my_direct.napr} \n"
+                                               f"Образовательная программа: {my_direct.edup} \n"
+                                               f"Группа: {my_direct.group} \n"
+                                               "Выбери формат вывода расписания: \n", reply_markup=markup)
+
+
+
 
 bot.infinity_polling()
