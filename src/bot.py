@@ -70,7 +70,6 @@ def callback_query(call):
         # bot.send_message(call.message.chat.id, f"Бакалавриат {course}-курс. Институты ГУУ:", reply_markup = markup)
         bot.edit_message_text(f"Бакалавриат {course}-курс. Институты ГУУ:", chat_id = call.message.chat.id, message_id = msg.message_id, reply_markup=markup)
 
-
     # получили название института
     if req[0] in my_direct.list_insts:
         bot.delete_message(call.message.chat.id, call.message.message_id)
@@ -78,11 +77,13 @@ def callback_query(call):
 
         my_direct.set_inst(req[0])      # добавили в наш объект выбранный институт
         my_direct.get_list_napr()       # формируем лист направлений
+
         i = 0
         for name in my_direct.list_napr:
             if str(name) == 'None':continue
 
             btn = types.InlineKeyboardButton(text=name, callback_data=f'{i}napr')
+            i+=1
             markup.add(btn)
         m = "Направления " + req[0] + ":"
         bot.send_message(call.message.chat.id, f"Направления {my_direct.inst}:", reply_markup=markup)
@@ -106,13 +107,11 @@ def callback_query(call):
             markup.add(btn)
         bot.send_message(call.message.chat.id, f"Образовательные программы {my_direct.napr}:", reply_markup = markup)
 
-    print(f'req[0]: {req[0]}, type: {type(req[0])}')
-
     # получили название обр программы
     if req[0][1:] == 'edup':
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        print(f'my_direct.list_edup[0]: {my_direct.list_edup[0]}')
         my_direct.set_edup(my_direct.list_edup[int(req[0][:1])])
+
         my_direct.get_list_group()  # формируем лист групп
 
         markup = types.InlineKeyboardMarkup()
@@ -123,8 +122,6 @@ def callback_query(call):
             btn = types.InlineKeyboardButton(text = group, callback_data = int(group))
             markup.add(btn)
         bot.send_message(call.message.chat.id, "Отлично! Теперь нужно выбрать группу", reply_markup = markup)
-
-    print(f'req[0]: {req[0]}, type: {type(req[0])}')
 
     # получили группу
     if req[0] in str(my_direct.list_groups):

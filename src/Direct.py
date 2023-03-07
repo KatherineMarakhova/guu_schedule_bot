@@ -46,11 +46,12 @@ class Direct:
         self.list_insts = full_inst_list
 
     def get_list_edup(self):
-        y = (self.get_indexes(self.sheet, 'Образовательная программа'))[0]                  #индекс строки
-        x = (self.next_idx(self.sheet, 'Образовательная программа'))[1]                     #индекс столбца
+        y = (self.get_indexes(self.sheet, 'Образовательная программа'))[0]
+        x = (self.get_indexes(self.sheet, self.napr))[1]
+        gx = (self.next_idx(self.sheet, self.napr))[1]
         dict_of = {}
         temp = ''
-        for j in range(x, self.sheet.max_column+1):                           # сдвигаемся вправо на два элемента(ЭТО НАДО ИСПРАВИТЬ)
+        for j in range(x, gx):                           # сдвигаемся вправо на два элемента(ЭТО НАДО ИСПРАВИТЬ)
 
               name = str(self.sheet.cell(y,j).value).strip()
 
@@ -103,7 +104,7 @@ class Direct:
 
     #  БЛОК ПОЛУЧЕНИЯ И ОБРАБОТКИ ФАЙЛА ==========================================================
     def first_start(self):
-        sf.get_file(self.course)                     # скачиваем файл с сайта относительно курса
+
         self.path = self.get_file_path()             # записываем путь скачанного файла
         self.unmerge_all_cells()                     # обрабатываем объединенные ячейки
         self.unmerge_institutes()                    # разделяем два института, хранящихся на одном листе
@@ -129,6 +130,9 @@ class Direct:
     def get_file_path(self):
         with Path(r"/Users/katherine.marakhova/PycharmProjects/exampleBot/files") as direction:
             s = str(self.course) + "-курс-бакалавриат*.xlsx"
+            for f in direction.glob(s):
+                return f
+            sf.get_file(self.course)  # скачиваем файл с сайта относительно курса
             for f in direction.glob(s):
                 return f
 
@@ -193,18 +197,20 @@ class Direct:
 
     # Получение индекса(строка, столбец) относительно содержимого ячейки
     def get_indexes(self, sheet, header_el):
+        header_el = header_el.lower()
         for i in range(1, sheet.max_row):
             for j in range(1, sheet.max_column):
-                val = str(sheet.cell(i, j).value)
+                val = str(sheet.cell(i, j).value).lower()
                 if (val == header_el or val.find(header_el) != -1):
                     return (i, j)
 
     # делает то же самое что и get_indexes только с понижением строки
     def get_indexes_cat(self, sheet, header_el, cat = 'Образовательная программа'):
+        header_el = header_el.lower()
         y, x = self.get_indexes(self.sheet, cat)    # нам нужна только строка! те у
         for i in range(y, sheet.max_row):
             for j in range(1, sheet.max_column):
-                val = str(sheet.cell(i, j).value)
+                val = str(sheet.cell(i, j).value).lower()
                 if (val == header_el or val.find(header_el) != -1):
                     return (i, j)
 
