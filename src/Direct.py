@@ -4,15 +4,16 @@ from pathlib import Path
 import selenium_fcs as sf
 
 class Direct:
-    first_start = True
+
     course = ''
     path = ''
     wb = ''
     sheet = ''
     list_insts = ''         # список институтов
     inst = ''               # выбранный институт
+    list_edup = ''
+    edup = ''
     list_napr = ''
-    dict_napr = ''
     napr = ''
     list_groups = ''
     group = ''
@@ -30,6 +31,9 @@ class Direct:
     def set_napr(self, napr):
         self.napr = napr
 
+    def set_edup(self, edup):
+        self.edup = edup
+
     def set_group(self, group):
         self.group = group
 
@@ -41,8 +45,25 @@ class Direct:
                 full_inst_list.remove(s)
         self.list_insts = full_inst_list
 
+    def get_list_edup(self):
+        y = (self.get_indexes(self.sheet, 'Образовательная программа'))[0]                  #индекс строки
+        x = (self.next_idx(self.sheet, 'Образовательная программа'))[1]                     #индекс столбца
+        dict_of = {}
+        temp = ''
+        for j in range(x, self.sheet.max_column+1):                           # сдвигаемся вправо на два элемента(ЭТО НАДО ИСПРАВИТЬ)
+
+              name = str(self.sheet.cell(y,j).value).strip()
+
+              if (name != '' and name != temp and name!='None'):
+                   dict_of[name] = [y, j]
+              else:
+                   continue
+              temp = name                                                 #сохраняем значение для проверки на объединенную ячейку
+
+        self.list_edup = list(dict_of.keys())
+
     # Получение словаря {'название инст/напр': его индекс относительно талицы(строка, столбец)}
-    def get_dict_napr(self):
+    def get_list_napr(self):
         # 1. определяем строку с направлениями
         # 2. определяем столбец с которого начинаются наименования
         y = (self.get_indexes(self.sheet, 'НАПРАВЛЕНИЕ'))[0]                  #индекс строки
@@ -58,7 +79,6 @@ class Direct:
               else:
                    continue
               temp = name                                                 #сохраняем значение для проверки на объединенную ячейку
-        self.dict_napr = dict_of
         self.list_napr = list(dict_of.keys())
 
     def get_list_group(self):
@@ -66,8 +86,8 @@ class Direct:
         # 2. получить начало(индекс столбца) выбранного направления
         # 3. получить конец(индекс столбца) выбранного направления
         g_idx = (self.get_indexes(self.sheet, '№ учебной группы'))[0]    # строка
-        s_idx = (self.get_indexes(self.sheet, self.napr))[1]             # начало(столбец)
-        e_idx = (self.next_idx(self.sheet, self.napr))[1]                # конец(столбец)
+        s_idx = (self.get_indexes(self.sheet, self.edup))[1]             # начало(столбец)
+        e_idx = (self.next_idx(self.sheet, self.edup))[1]                # конец(столбец)
         groups = []
         for i in range(s_idx, e_idx):
             group = self.sheet.cell(row = g_idx, column = i).value
@@ -90,7 +110,20 @@ class Direct:
         # print(f'path: {self.path}')
         self.wb = load_workbook(self.path)
 
-        self.first_start = False
+
+    def clean_all(self):
+        self.path = ''
+        self.wb = ''
+        self.sheet = ''
+        self.list_insts = ''  # список институтов
+        self.inst = ''  # выбранный институт
+        self.list_edup = ''
+        self.edup = ''
+        self.list_napr = ''
+        self.napr = ''
+        self.list_groups = ''
+        self.group = ''
+
 
     # Получение пути интересующего нас файла
     def get_file_path(self):
@@ -166,6 +199,15 @@ class Direct:
                 if (val == header_el or val.find(header_el) != -1):
                     return (i, j)
 
+    # делает то же самое что и get_indexes только с понижением строки
+    def get_indexes_cat(self, sheet, header_el, cat = 'Образовательная программа'):
+        y, x = self.get_indexes(self.sheet, cat)    # нам нужна только строка! те у
+        for i in range(y, sheet.max_row):
+            for j in range(1, sheet.max_column):
+                val = str(sheet.cell(i, j).value)
+                if (val == header_el or val.find(header_el) != -1):
+                    return (i, j)
+
     # Получение индекса другого элемента(не равного по названию)
     def next_idx(self, sheet, name_el):
         y, x = self.get_indexes(sheet, name_el)  # строка, столбец начала
@@ -177,13 +219,14 @@ class Direct:
 
     # БЛОК ВЫВОДА РАСПИСАНИЯ ======================================================================
     def get_full_scd(self):
-        answer = f'Расписание для {self.napr} {self.course}-{self.group}\n'
+        answer = f'Расписание для {self.edup} {self.course}-{self.group}\n'
         # получаем граничные индексы
-        r, c = self.get_indexes(self.sheet, self.napr)  # row = 5, coll = 4
-        group = 1
-        c = c + group - 1  # перезаписываем столбец на новое значение
+        r, c = self.get_indexes_cat(self.sheet, self.edup)  # row = 5, coll = 4
+
+        c = c + int(self.group) - 1  # перезаписываем столбец на новое значение
 
         temp = ''
+        lesson = ''
         for i in range(9, self.sheet.max_row):
 
             if (str(self.sheet.cell(i, 2).value) == 'None'): break
@@ -192,6 +235,7 @@ class Direct:
             time = str(self.sheet.cell(i, 3).value)
             even = str(self.sheet.cell(i, 4).value)
             sbj = str(self.sheet.cell(i, c).value)
+            if sbj == 'None': sbj = 'Занятий нет'
 
             dash = '--------------------------------------️'
 
@@ -207,10 +251,10 @@ class Direct:
                 lesson += 1
 
             if i % 2 != 0:
-                answer += (f'{lesson}📍' + time + '\n- ' + even + sbj + '\n\n')
+                answer += (f'{lesson}📍' + time + '\n- ' + even + " " + sbj + '\n\n')
                 lesson += 1
             else:
-                answer += ('- ' + even + sbj + '\n\n')
+                answer += ('- ' + even + " " + sbj + '\n\n')
 
-        print(answer)
+        # print(answer)
         return answer
