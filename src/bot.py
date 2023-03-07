@@ -62,21 +62,22 @@ def callback_query(call):
         markup = types.InlineKeyboardMarkup()
 
         my_direct.get_list_inst()
-
+        i = 0
         for name in my_direct.list_insts:
-            btn = types.InlineKeyboardButton(text=str(name), callback_data=str(name))
+            btn = types.InlineKeyboardButton(text=str(name), callback_data=f'{i}inst')
+            i+=1
             markup.add(btn)
 
         # bot.send_message(call.message.chat.id, f"Бакалавриат {course}-курс. Институты ГУУ:", reply_markup = markup)
         bot.edit_message_text(f"Бакалавриат {course}-курс. Институты ГУУ:", chat_id = call.message.chat.id, message_id = msg.message_id, reply_markup=markup)
 
     # получили название института
-    if req[0] in my_direct.list_insts:
+    if req[0][1:] == 'inst':
         bot.delete_message(call.message.chat.id, call.message.message_id)
         markup = types.InlineKeyboardMarkup()
 
-        my_direct.set_inst(req[0])      # добавили в наш объект выбранный институт
-        my_direct.get_list_napr()       # формируем лист направлений
+        my_direct.set_inst(my_direct.list_insts[int(req[0][:1])])      # добавили в наш объект выбранный институт
+        my_direct.get_list_napr()                                 # формируем лист направлений
 
         i = 0
         for name in my_direct.list_napr:
@@ -85,7 +86,7 @@ def callback_query(call):
             btn = types.InlineKeyboardButton(text=name, callback_data=f'{i}napr')
             i+=1
             markup.add(btn)
-        m = "Направления " + req[0] + ":"
+
         bot.send_message(call.message.chat.id, f"Направления {my_direct.inst}:", reply_markup=markup)
 
     # получили название направления
@@ -117,22 +118,25 @@ def callback_query(call):
         markup = types.InlineKeyboardMarkup()
 
         print(f'list_groups {my_direct.list_groups}')
+        i = 0
         for group in my_direct.list_groups:
             if str(group) == 'None': continue
-            btn = types.InlineKeyboardButton(text = group, callback_data = int(group))
+
+            btn = types.InlineKeyboardButton(text = group, callback_data = f'{i}group')
+            i+=1
             markup.add(btn)
         bot.send_message(call.message.chat.id, "Отлично! Теперь нужно выбрать группу", reply_markup = markup)
 
     # получили группу
-    if req[0] in str(my_direct.list_groups):
+    if req[0][1:] == 'group':
         # bot.delete_message(call.message.chat.id, call.message.message_id)
-        my_direct.set_group(req[0])
+        my_direct.set_group(my_direct.list_groups[int(req[0][:1])])
 
         markup = types.InlineKeyboardMarkup()
-        btn1 = types.InlineKeyboardButton(call.message.chat.id, 'расписание целиком', callback_data='full_scd')
-        btn2 = types.InlineKeyboardButton(call.message.chat.id, 'расписание четной недели', callback_data='even_scd')
-        btn3 = types.InlineKeyboardButton(call.message.chat.id, 'расписание нечетной недели', callback_data='odd_scd')
-        btn4 = types.InlineKeyboardButton(call.message.chat.id, 'расписание по дням', callback_data='week_day_scd')
+        btn1 = types.InlineKeyboardButton('расписание целиком', callback_data='full_scd')
+        btn2 = types.InlineKeyboardButton('расписание четной недели', callback_data='even_scd')
+        btn3 = types.InlineKeyboardButton('расписание нечетной недели', callback_data='odd_scd')
+        btn4 = types.InlineKeyboardButton('расписание по дням', callback_data='week_day_scd')
         markup.add(btn1, btn2, btn3, btn4)
 
         bot.send_message(call.message.chat.id, "Настройка завершена!✅\n"
@@ -141,8 +145,5 @@ def callback_query(call):
                                                f"Образовательная программа: {my_direct.edup} \n"
                                                f"Группа: {my_direct.group} \n"
                                                "Выбери формат вывода расписания: \n", reply_markup=markup)
-
-
-
 
 bot.infinity_polling()

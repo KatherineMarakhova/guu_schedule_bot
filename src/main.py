@@ -39,11 +39,11 @@ obj.set_napr('МЕНЕДЖМЕНТ')
 
 obj.get_list_edup()
 print(f'obj.list_edup: {obj.list_edup}')
-# obj.set_edup('ПРИКЛАДНАЯ МАТЕМАТИКА И ИНФОРМАТИКА')
-#
-# obj.get_list_group()
-# print(f'obj.list_groups: {obj.list_groups}')
-# obj.set_group(1)
+obj.set_edup('Управление проектом')
+
+obj.get_list_group()
+print(f'obj.list_groups: {obj.list_groups}')
+obj.set_group(1)
 #
 # # obj.get_scd_even('НЕЧЁТ.')
 # obj.get_scd_weekday()
