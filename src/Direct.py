@@ -225,15 +225,15 @@ class Direct:
 
     # БЛОК ВЫВОДА РАСПИСАНИЯ ======================================================================
     def get_scd_full(self):
-        answer = f'Расписание для {self.edup} {self.course}-{self.group}\n'
+        answer = f'Расписание для {self.edup.title()} {self.course}-{self.group}\n'
         # получаем граничные индексы
-        r, c = self.get_indexes_cat(self.sheet, self.edup)  # row = 5, coll = 4
-
+        c = self.get_indexes_cat(self.sheet, self.edup)[1]  # coll
+        r = self.get_indexes(self.sheet, 'Понедельник')[0]  # row
         c = c + int(self.group) - 1  # перезаписываем столбец на новое значение
 
         temp = ''
         lesson = ''
-        for i in range(9, self.sheet.max_row):
+        for i in range(r, self.sheet.max_row):
 
             if (str(self.sheet.cell(i, 2).value) == 'None'): break
 
@@ -264,17 +264,17 @@ class Direct:
 
         return answer
 
-    def get_scd_even(self, eveness="ЧЁТ."):
+    def get_scd_even(self, eveness = "ЧЁТ."):
         answer = f'Расписание для {self.edup} {self.course}-{self.group}\n'
-        answer += f'{eveness.lower()} неделя\n'
+        answer += f'{eveness.title()} неделя\n'
         # получаем граничные индексы
-        r, c = self.get_indexes_cat(self.sheet, self.edup)  # row = 5, coll = 4
+        c = self.get_indexes_cat(self.sheet, self.edup)[1]  # coll
+        c = c + int(self.group) - 1                         # перезаписываем столбец на новое значение
 
-        c = c + int(self.group) - 1  # перезаписываем столбец на новое значение
-
+        r = self.get_indexes(self.sheet, 'Понедельник')[0]
         temp = ''
         lesson = ''
-        for i in range(9, self.sheet.max_row):
+        for i in range(r, self.sheet.max_row):
 
             if (str(self.sheet.cell(i, 2).value) == 'None'): break
 
@@ -298,7 +298,42 @@ class Direct:
             if even.strip().lower() == eveness.strip().lower():
                 answer += (f'{lesson}📍{time}\n{sbj}\n\n')
                 lesson += 1
-
-
         return answer
 
+    def get_scd_weekday(self, weekday = 'Понедельник'):
+        answer = f'Расписание для {self.edup} {self.course}-{self.group}\n'
+
+        spaces = ''
+        dash = '--------------------------------------️'
+        n = len(dash) - len('❗️' + weekday.upper() + '❗️') - 1
+        for i in range(n):
+            spaces += ' '
+        answer += f'{dash}\n❗️{weekday.upper()}❗{spaces}|️\n{dash}\n'
+
+
+        # получаем граничные индексы
+        c = self.get_indexes_cat(self.sheet, self.edup)[1]  # coll
+        c = c + int(self.group) - 1                         # перезаписываем столбец на новое значение
+        r = self.get_indexes(self.sheet, 'Понедельник')[0]
+
+        temp = ''
+        lesson = 1
+        for i in range(r, self.sheet.max_row):
+
+            if (str(self.sheet.cell(i, 2).value) == 'None'): break
+
+            day = str(self.sheet.cell(i, 2).value)
+            time = str(self.sheet.cell(i, 3).value)
+            even = str(self.sheet.cell(i, 4).value)
+            sbj = str(self.sheet.cell(i, c).value)
+            if sbj == 'None': sbj = 'Занятий нет'
+
+            if weekday.lower() == day.lower():
+
+                if i % 2 != 0:
+                    answer += (f'{lesson}📍{time}\n- {even.title()}\n {sbj}\n\n')
+                    lesson += 1
+                else:
+                    answer += (f'- {even.title()}\n {sbj}\n\n')
+
+        return answer

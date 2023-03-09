@@ -97,7 +97,7 @@ def callback_query(call):
         my_direct.get_list_edup() # формируем лист обр программ
 
         markup = types.InlineKeyboardMarkup()
-        print(f'my_direct.list_edup: {my_direct.list_edup}')
+        # print(f'my_direct.list_edup: {my_direct.list_edup}')
         i = 0
 
         for edup in my_direct.list_edup:
@@ -126,8 +126,8 @@ def callback_query(call):
             markup.add(btn)
         bot.send_message(call.message.chat.id, "Отлично! Теперь нужно выбрать группу", reply_markup = markup)
 
-    print(f'req[0]: {req[0]}')
-    print(f'req[0]: {req[0]=="group"}')
+
+
     # получили группу
     if req[0][1:] == 'group':
         bot.delete_message(call.message.chat.id, call.message.message_id)
@@ -160,6 +160,18 @@ def callback_query(call):
         bot.send_message(call.message.chat.id, answer)
 
     if req[0] == 'weekdayscd':
-        pass
+        markup = types.InlineKeyboardMarkup(row_width=7)
+        btn1 = types.InlineKeyboardButton('ПН', callback_data='Понедельник')
+        btn2 = types.InlineKeyboardButton('ВТ', callback_data='Вторник')
+        btn3 = types.InlineKeyboardButton('СР', callback_data='Среда')
+        btn4 = types.InlineKeyboardButton('ЧТ', callback_data='Четверг')
+        btn5 = types.InlineKeyboardButton('ПТ', callback_data='Пятница')
+        btn6 = types.InlineKeyboardButton('СБ', callback_data='Суббота')
+        markup.add(btn1, btn2, btn3, btn4, btn5, btn6)
+        bot.send_message(call.message.chat.id, "Выбери день недели: \n", reply_markup=markup)
+    weekdays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']
+    if req[0] in weekdays:
+        answer = my_direct.get_scd_weekday(req[0])
+        bot.send_message(call.message.chat.id, answer)
 
 bot.infinity_polling()

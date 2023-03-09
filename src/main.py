@@ -45,8 +45,8 @@ obj.get_list_group()
 print(f'obj.list_groups: {obj.list_groups}')
 obj.set_group(1)
 #
-print(obj.get_scd_even('НЕЧЁТ.'))
-# obj.get_scd_weekday()
+# print(obj.get_scd_even('НЕЧЁТ.'))
+print(obj.get_scd_weekday())
 
 
 
