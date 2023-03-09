@@ -324,19 +324,21 @@ class Direct:
         answer += f'{dash}\n❗️{weekday.upper()}❗{spaces}|️\n{dash}\n'
 
         # получаем граничные индексы
-        coll = self.get_indexes_cat(self.sheet, self.edup, 'Образовательная программа')[1]  # столбец начала обр прог
-        coll = coll + int(self.group) - 1                                                   # столбец нужной группы
-        row = self.get_indexes(self.sheet, 'Понедельник')[0]                                # cтрока от которой будем ползти вниз
+        day = self.get_indexes(self.sheet, 'Понедельник')
+        d_idx = int(day[1])
+        row = day[0]  # строка
+        coll = self.get_indexes_cat(self.sheet, self.edup, 'Образовательная программа')[1]  # столбец
+        coll = coll + int(self.group) - 1  # столбец относительно группы
 
         temp = ''
         lesson = 1
         for i in range(row, self.sheet.max_row):
 
-            if (str(self.sheet.cell(i, 2).value) == 'None'): break
+            day = str(self.sheet.cell(i, d_idx).value)
+            if (day.lower() == 'none'): break
 
-            day = str(self.sheet.cell(i, 2).value)
-            time = str(self.sheet.cell(i, 3).value)
-            even = str(self.sheet.cell(i, 4).value)
+            time = str(self.sheet.cell(i, d_idx+1).value)
+            even = str(self.sheet.cell(i, d_idx+2).value)
             sbj = str(self.sheet.cell(i, coll).value)
 
             if sbj == 'None': sbj = 'Занятий нет'
