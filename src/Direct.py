@@ -108,7 +108,7 @@ class Direct:
         self.path = self.get_file_path()             # записываем путь скачанного файла
         self.unmerge_all_cells()                     # обрабатываем объединенные ячейки
         self.unmerge_institutes()                    # разделяем два института, хранящихся на одном листе
-        # print(f'path: {self.path}')
+        print(f'path: {self.path}')
         self.wb = load_workbook(self.path)
 
     def clean_all(self):
@@ -193,13 +193,12 @@ class Direct:
                 # надо будет написать функцию добывающую этот индекс, чтобы было гибко
                 workbook.save(self.path)
 
-    # Получение индекса(строка, столбец) относительно содержимого ячейки
+    # ✔️️ Получение индекса(строка, столбец) относительно содержимого ячейки
     def get_indexes(self, sheet, header_el):
         header_el = (header_el.strip()).lower()
         for i in range(1, sheet.max_row):
             for j in range(1, sheet.max_column):
                 val = (str(sheet.cell(i, j).value).strip()).lower()
-                # if (val == header_el or val.find(header_el) != -1):
                 if (val == header_el):
                     return (i, j)
 
@@ -210,7 +209,8 @@ class Direct:
         for i in range(y, sheet.max_row):
             for j in range(1, sheet.max_column):
                 val = str(sheet.cell(i, j).value).strip().lower()
-                if (val == header_el or val.find(header_el) != -1):
+                # if (val == header_el or val.find(header_el) != -1):
+                if (val == header_el):
                     return (i, j)
 
     # Получение индекса другого элемента(не равного по названию)
@@ -222,6 +222,18 @@ class Direct:
             if val != name_el and val != 'None' and val.find(name_el) == -1:
                 return (y, j)
         return (y, sheet.max_column+1)  # значит он последний
+
+        # Получение индекса другого элемента(не равного по названию)
+    def next_idx_cat(self, sheet, name_el, category):
+        row = self.get_indexes(self.sheet, category)[0]
+        name_el = name_el.strip().lower()
+        coll = self.get_indexes(sheet, name_el)[1]  # строка, столбец начала
+
+        for c in range(coll, sheet.max_column+1):  # строка не меняется
+            val = str(sheet.cell(row, c).value).strip().lower()
+            if val == name_el: continue
+            elif val != name_el: return (row, c)
+        # if str(sheet.cell(row, c).value).strip().lower() == 'none': return (row, c-3)
 
     # БЛОК ВЫВОДА РАСПИСАНИЯ ======================================================================
     def get_scd_full(self):
@@ -235,17 +247,18 @@ class Direct:
         lesson = ''
         for i in range(r, self.sheet.max_row):
 
-            if (str(self.sheet.cell(i, 2).value) == 'None'): break
-
             day = str(self.sheet.cell(i, 2).value)
             time = str(self.sheet.cell(i, 3).value)
             even = str(self.sheet.cell(i, 4).value)
             sbj = str(self.sheet.cell(i, c).value)
+
+            if (day == 'None'): break
+
             if sbj == 'None': sbj = 'Занятий нет'
 
             dash = '--------------------------------------️'
 
-            if temp != str(self.sheet.cell(i, 2).value):
+            if temp != day:
                 spaces = ''
                 n = len(dash) - len('❗️' + day + '❗️') - 1
                 for i in range(n):
@@ -257,10 +270,10 @@ class Direct:
                 lesson += 1
 
             if i % 2 != 0:
-                answer += (f'{lesson}📍{time}\n- {even} {sbj}\n\n')
+                answer += (f'{lesson}📍{time}\n- {even.title()}\n {sbj}\n\n')
                 lesson += 1
             else:
-                answer += (f'- {even} {sbj}\n\n')
+                answer += (f'- {even.title()}\n {sbj}\n\n')
 
         return answer
 
