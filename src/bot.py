@@ -153,7 +153,8 @@ def callback_query(call):
         answer = my_direct.get_scd_full()
         if len(answer) > 4096:
             bot.edit_message_text(text='Текст расписания слишком большой!\nПожалуйста, выберите другой формат', chat_id=call.message.chat.id, message_id=msg.message_id)
-        bot.edit_message_text(text = answer, chat_id = call.message.chat.id, message_id = msg.message_id)
+        else:
+            bot.edit_message_text(text = answer, chat_id = call.message.chat.id, message_id = msg.message_id)
 
     if req[0] == 'evenscd':
         answer = my_direct.get_scd_even(eveness="ЧЁТ.")
