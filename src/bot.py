@@ -2,6 +2,7 @@ import config as cf
 import telebot
 from telebot import types
 from Direct import *
+import time
 
 
 bot = telebot.TeleBot(cf.token)
@@ -47,7 +48,6 @@ def callback_query(call):
             btn = types.InlineKeyboardButton(text=f'{i}-курс', callback_data=f'{i}course')
             markup.add(btn)
         bot.send_message(call.message.chat.id, "Бакалавриат. Курсы: ", reply_markup=markup)
-
 
     # получили курс
     if req[0][1:] == 'course':
@@ -149,8 +149,12 @@ def callback_query(call):
         bot.send_message(call.message.chat.id, "Выбери формат вывода расписания: \n", reply_markup = markup)
 
     if str(req[0]) == 'fullscd':
+        msg = bot.send_message(call.message.chat.id, "Загрузка..")
         answer = my_direct.get_scd_full()
-        bot.send_message(call.message.chat.id, answer)
+        if len(answer) > 4096:
+            bot.edit_message_text(text='Текст расписания слишком большой!\nПожалуйста, выберите другой формат', chat_id=call.message.chat.id, message_id=msg.message_id)
+        bot.edit_message_text(text = answer, chat_id = call.message.chat.id, message_id = msg.message_id)
+
     if req[0] == 'evenscd':
         answer = my_direct.get_scd_even(eveness="ЧЁТ.")
         bot.send_message(call.message.chat.id, answer)

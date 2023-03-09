@@ -39,29 +39,36 @@ print(f'Институты : {obj.list_insts}')
 #     obj.get_list_napr()
 #     print(f'Направления: {obj.list_napr}')
 
-obj.set_inst('ИГУиП 1 курс')
-sheet = obj.wb['ИГУиП 1 курс']
-obj.get_list_napr()
-obj.set_napr('менеджмент')
-obj.get_list_edup()
-print(obj.list_edup)
-print(obj.get_indexes(sheet, 'политология'))
-# print(obj.next_idx(sheet, 'политология'))
-print(obj.next_idx_cat(sheet, 'политология', 'направление'))
-print(sheet.cell(5, 13).value)
-# obj.set_napr('ГОСУДАРСТВЕННОЕ И МУНИЦИПАЛЬНОЕ УПРАВЛЕНИЕ')
-#
-# obj.get_list_edup()
-# print(f'obj.list_edup: {obj.list_edup}')
-# obj.set_edup('МЕНЕДЖМЕНТ')
-#
-# obj.get_list_group()
-# print(f'obj.list_groups: {obj.list_groups}')
-# obj.set_group(1)
-#
-# # print(obj.get_scd_even('НЕЧЁТ.'))
-# # print(obj.get_scd_weekday())
 
+obj.set_inst('ИУПСиБК 1 курс')
+sheet = obj.wb['ИУПСиБК 1 курс']
+obj.get_list_napr()
+print(f'naprs: {obj.list_napr}')
+obj.set_napr('ГОСТИНИЧНОЕ ДЕЛО')
+obj.get_list_edup()
+print(f'edups: {obj.list_edup}')
+obj.set_edup('Гостиничный и ресторанный бизнес')
+obj.get_list_group()
+print(f'groups {obj.list_groups}')
+obj.set_group(1)
+print(obj.get_scd_full())
+# print(f'get_indexes {obj.get_indexes(sheet, "направление")}')
+# print(obj.next_idx(sheet, 'политология'))
+# print(f'{obj.get_indexes_cat(sheet, "СОЦИОЛОГИЯ", "направление")}')
+# print(obj.next_idx_cat(sheet, "СОЦИОЛОГИЯ", 'направление'))
+
+# print(f'day {sheet.cell(10, 3).value}')
+# obj.set_inst('ИОМ 2 курс')
+# sheet = obj.wb['ИОМ 2 курс']
+# obj.get_list_napr()
+# print(f'naprs: {obj.list_napr}')
+# obj.set_napr('МЕНЕДЖМЕНТ')
+# obj.get_list_edup()
+# print(f'edups: {obj.list_edup}')
+
+# print(f'get_indexes {obj.get_indexes(sheet, "ПРИКЛАДНАЯ ИНФОРМАТИКА")}')
+# # print(obj.next_idx(sheet, 'политология'))
+# print(obj.next_idx_cat(sheet, 'ПРИКЛАДНАЯ ИНФОРМАТИКА', 'направление'))
 
 
 

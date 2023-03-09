@@ -9,13 +9,13 @@ class Direct:
     path = ''
     wb = ''
     sheet = ''
-    list_insts = ''         # список институтов
+    list_insts = []         # список институтов
     inst = ''               # выбранный институт
-    list_edup = ''
+    list_edup = []
     edup = ''
-    list_napr = ''
+    list_napr = []
     napr = ''
-    list_groups = ''
+    list_groups = []
     group = ''
 
     def set_path(self, path):
@@ -45,53 +45,50 @@ class Direct:
                 full_inst_list.remove(s)
         self.list_insts = full_inst_list
 
-    def get_list_edup(self):
-        y = (self.get_indexes(self.sheet, 'Образовательная программа'))[0]
-        x = (self.get_indexes(self.sheet, self.napr))[1]
-        gx = (self.next_idx(self.sheet, self.napr))[1]
-        dict_of = {}
-        temp = ''
-        for j in range(x, gx):                           # сдвигаемся вправо на два элемента(ЭТО НАДО ИСПРАВИТЬ)
-
-              name = str(self.sheet.cell(y,j).value).strip()
-
-              if (name != '' and name != temp and name!='None'):
-                   dict_of[name] = [y, j]
-              else:
-                   continue
-              temp = name                                                 #сохраняем значение для проверки на объединенную ячейку
-
-        self.list_edup = list(dict_of.keys())
 
     # Получение словаря {'название инст/напр': его индекс относительно талицы(строка, столбец)}
     def get_list_napr(self):
         # 1. определяем строку с направлениями
         # 2. определяем столбец с которого начинаются наименования
-        y = (self.get_indexes(self.sheet, 'НАПРАВЛЕНИЕ'))[0]                  #индекс строки
-        x = (self.next_idx(self.sheet, 'НАПРАВЛЕНИЕ'))[1]                     #индекс столбца
-        dict_of = {}
+        curr = (self.next_idx_cat(self.sheet, 'НАПРАВЛЕНИЕ', 'НАПРАВЛЕНИЕ'))      # строка и столбец
+
         temp = ''
-        for j in range(x, self.sheet.max_column+1):                           # сдвигаемся вправо на два элемента(ЭТО НАДО ИСПРАВИТЬ)
+        list_napr = []
 
-              name = str(self.sheet.cell(y,j).value).strip()
-
+        for j in range(curr[1], self.sheet.max_column+1):                           # сдвигаемся вправо на два элемента(ЭТО НАДО ИСПРАВИТЬ)
+              name = str(self.sheet.cell(curr[0],j).value).strip()
               if (name != '' and name != temp and name!='None'):
-                   dict_of[name] = [y, j]
+                   list_napr.append(name)
               else:
                    continue
-              temp = name                                                 #сохраняем значение для проверки на объединенную ячейку
-        self.list_napr = list(dict_of.keys())
+              temp = name
+        self.list_napr = list_napr
+
+    # получаем образовательные программы относительно направления
+    def get_list_edup(self):
+        row = self.get_indexes(self.sheet, 'Образовательная программа')[0]            # рабочая строка
+        coll = self.get_indexes_cat(self.sheet, self.napr, 'направление')[1]            # столбец где начинается направление
+        next = self.next_idx_cat(self.sheet, self.napr, 'направление')[1]             # столбец где оно заканчивается
+        list_edup = []
+        temp = ''
+        for j in range(coll, next):  # идем по столбцам
+            name = str(self.sheet.cell(row, j).value).strip()
+            if (name != '' and name != temp and name != 'None'):
+                list_edup.append(name)
+            else:
+                continue
+            temp = name  # сохраняем значение для проверки на объединенную ячейку
+
+        self.list_edup = list_edup
 
     def get_list_group(self):
-        # 1. получить строку на которой хранятся группы
-        # 2. получить начало(индекс столбца) выбранного направления
-        # 3. получить конец(индекс столбца) выбранного направления
-        g_idx = (self.get_indexes(self.sheet, '№ учебной группы'))[0]    # строка
-        s_idx = (self.get_indexes(self.sheet, self.edup))[1]             # начало(столбец)
-        e_idx = (self.next_idx(self.sheet, self.edup))[1]                # конец(столбец)
+        row = (self.get_indexes(self.sheet, '№ учебной группы'))[0]                           # рабочая строка
+        coll = (self.get_indexes_cat(self.sheet, self.edup, 'Образовательная программа'))[1]  # столбец где начинается обр прог
+        next = (self.next_idx_cat(self.sheet, self.edup, 'Образовательная программа'))[1]     # столбец где заканчивается обр прог
+
         groups = []
-        for i in range(s_idx, e_idx):
-            group = self.sheet.cell(row = g_idx, column = i).value
+        for j in range(coll, next):
+            group = self.sheet.cell(row, j).value
             if group == "None": continue
             groups.append(group)
         self.list_groups = groups
@@ -193,66 +190,63 @@ class Direct:
                 # надо будет написать функцию добывающую этот индекс, чтобы было гибко
                 workbook.save(self.path)
 
-    # ✔️️ Получение индекса(строка, столбец) относительно содержимого ячейки
-    def get_indexes(self, sheet, header_el):
-        header_el = (header_el.strip()).lower()
+    # ✔️️ Получение индекса(строка, столбец). Используется для значений Институт, направление, образовательная программа и тд.(категории)
+    def get_indexes(self, sheet, category):
+        category = (category.strip()).lower()
         for i in range(1, sheet.max_row):
-            for j in range(1, sheet.max_column):
+            for j in range(1, sheet.max_column+1):
                 val = (str(sheet.cell(i, j).value).strip()).lower()
-                if (val == header_el):
+                if (val == category):
                     return (i, j)
 
-    # делает то же самое что и get_indexes только с понижением строки
-    def get_indexes_cat(self, sheet, header_el, cat = 'Образовательная программа'):
-        header_el = (header_el.strip()).lower()
-        y, x = self.get_indexes(self.sheet, cat)    # нам нужна только строка! те у
+    # Получение индекса названия относительно категории(института, направления и тд.)
+    def get_indexes_cat(self, sheet, name, category):
+        name = (name.strip()).lower()
+        y, x = self.get_indexes(self.sheet, category)    # нам нужна только строка! те у
         for i in range(y, sheet.max_row):
-            for j in range(1, sheet.max_column):
+            for j in range(1, sheet.max_column+1):
                 val = str(sheet.cell(i, j).value).strip().lower()
-                # if (val == header_el or val.find(header_el) != -1):
-                if (val == header_el):
+
+                if (val == name):
                     return (i, j)
 
-    # Получение индекса другого элемента(не равного по названию)
-    def next_idx(self, sheet, name_el):
-        name_el = name_el.strip().lower()
-        y, x = self.get_indexes(sheet, name_el)  # строка, столбец начала
-        for j in range(x, sheet.max_column):  # строка не меняется
-            val = str(sheet.cell(row=y, column=j).value).strip().lower()
-            if val != name_el and val != 'None' and val.find(name_el) == -1:
-                return (y, j)
-        return (y, sheet.max_column+1)  # значит он последний
+        # Получение индекса другого элемента по строке(не равного по названию)
+    def next_idx_cat(self, sheet, name, category):
+        row = self.get_indexes(self.sheet, category)[0]      #строка
+        name = name.strip().lower()
+        coll = self.get_indexes(sheet, name)[1]              #столбец
 
-        # Получение индекса другого элемента(не равного по названию)
-    def next_idx_cat(self, sheet, name_el, category):
-        row = self.get_indexes(self.sheet, category)[0]
-        name_el = name_el.strip().lower()
-        coll = self.get_indexes(sheet, name_el)[1]  # строка, столбец начала
+        if coll == sheet.max_column: return (row, coll+1)
 
         for c in range(coll, sheet.max_column+1):  # строка не меняется
             val = str(sheet.cell(row, c).value).strip().lower()
-            if val == name_el: continue
-            elif val != name_el: return (row, c)
-        # if str(sheet.cell(row, c).value).strip().lower() == 'none': return (row, c-3)
+            if val == name:
+                if c == sheet.max_column:
+                    return (row, sheet.max_column + 1)            #если это и есть наш последний элемент, то возращем его + 1
+                continue
+            elif val != name: return (row, c)
+        return
 
     # БЛОК ВЫВОДА РАСПИСАНИЯ ======================================================================
     def get_scd_full(self):
         answer = f'Расписание для {self.edup.title()} {self.course}-{self.group}\n'
         # получаем граничные индексы
-        c = self.get_indexes_cat(self.sheet, self.edup)[1]  # coll
-        r = self.get_indexes(self.sheet, 'Понедельник')[0]  # row
-        c = c + int(self.group) - 1  # перезаписываем столбец на новое значение
+        day = self.get_indexes(self.sheet, 'Понедельник')
+        d_idx = int(day[1])
+        row = day[0]                                                                        # строка
+        coll = self.get_indexes_cat(self.sheet, self.edup, 'Образовательная программа')[1]  # столбец
+        coll = coll + int(self.group) - 1                                                   # столбец относительно группы
 
         temp = ''
         lesson = ''
-        for i in range(r, self.sheet.max_row):
+        for i in range(row, self.sheet.max_row):
 
-            day = str(self.sheet.cell(i, 2).value)
-            time = str(self.sheet.cell(i, 3).value)
-            even = str(self.sheet.cell(i, 4).value)
-            sbj = str(self.sheet.cell(i, c).value)
+            day = str(self.sheet.cell(i, d_idx).value)
+            time = str(self.sheet.cell(i, d_idx+1).value)
+            even = str(self.sheet.cell(i, d_idx+2).value)
+            sbj = str(self.sheet.cell(i, coll).value)
 
-            if (day == 'None'): break
+            if (day.lower() == 'none'): break
 
             if sbj == 'None': sbj = 'Занятий нет'
 
@@ -278,28 +272,34 @@ class Direct:
         return answer
 
     def get_scd_even(self, eveness = "ЧЁТ."):
+
         answer = f'Расписание для {self.edup} {self.course}-{self.group}\n'
         answer += f'{eveness.title()} неделя\n'
-        # получаем граничные индексы
-        c = self.get_indexes_cat(self.sheet, self.edup)[1]  # coll
-        c = c + int(self.group) - 1                         # перезаписываем столбец на новое значение
 
-        r = self.get_indexes(self.sheet, 'Понедельник')[0]
+        # получаем граничные индексы
+        day = self.get_indexes(self.sheet, 'Понедельник')
+        d_idx = int(day[1])
+        row = day[0]  # строка
+        coll = self.get_indexes_cat(self.sheet, self.edup, 'Образовательная программа')[1]  # столбец
+        coll = coll + int(self.group) - 1  # столбец относительно группы
+
+
         temp = ''
         lesson = ''
-        for i in range(r, self.sheet.max_row):
+        for i in range(row, self.sheet.max_row):
 
-            if (str(self.sheet.cell(i, 2).value) == 'None'): break
+            day = str(self.sheet.cell(i, d_idx).value)
+            if (day.lower() == 'none'): break
 
-            day = str(self.sheet.cell(i, 2).value)
-            time = str(self.sheet.cell(i, 3).value)
-            even = str(self.sheet.cell(i, 4).value)
-            sbj = str(self.sheet.cell(i, c).value)
+            time = str(self.sheet.cell(i, d_idx+1).value)
+            even = str(self.sheet.cell(i, d_idx+2).value)
+            sbj = str(self.sheet.cell(i, coll).value)
+
             if sbj == 'None': sbj = 'Занятий нет'
 
             dash = '--------------------------------------️'
 
-            if temp != str(self.sheet.cell(i, 2).value):
+            if temp != day:
                 spaces = ''
                 n = len(dash) - len('❗️' + day + '❗️') - 1
                 for i in range(n):
@@ -323,30 +323,27 @@ class Direct:
             spaces += ' '
         answer += f'{dash}\n❗️{weekday.upper()}❗{spaces}|️\n{dash}\n'
 
-
         # получаем граничные индексы
-        c = self.get_indexes_cat(self.sheet, self.edup)[1]  # coll
-        c = c + int(self.group) - 1                         # перезаписываем столбец на новое значение
-        r = self.get_indexes(self.sheet, 'Понедельник')[0]
+        coll = self.get_indexes_cat(self.sheet, self.edup, 'Образовательная программа')[1]  # столбец начала обр прог
+        coll = coll + int(self.group) - 1                                                   # столбец нужной группы
+        row = self.get_indexes(self.sheet, 'Понедельник')[0]                                # cтрока от которой будем ползти вниз
 
         temp = ''
         lesson = 1
-        for i in range(r, self.sheet.max_row):
+        for i in range(row, self.sheet.max_row):
 
             if (str(self.sheet.cell(i, 2).value) == 'None'): break
 
             day = str(self.sheet.cell(i, 2).value)
             time = str(self.sheet.cell(i, 3).value)
             even = str(self.sheet.cell(i, 4).value)
-            sbj = str(self.sheet.cell(i, c).value)
+            sbj = str(self.sheet.cell(i, coll).value)
+
             if sbj == 'None': sbj = 'Занятий нет'
-
             if weekday.lower() == day.lower():
-
                 if i % 2 != 0:
                     answer += (f'{lesson}📍{time}\n- {even.title()}\n {sbj}\n\n')
                     lesson += 1
                 else:
                     answer += (f'- {even.title()}\n {sbj}\n\n')
-
         return answer
