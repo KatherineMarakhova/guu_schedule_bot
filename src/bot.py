@@ -42,15 +42,15 @@ def repbtns(chatid):
 
 def clear_chat(obj, msg):
     n = obj.msg_count
-    for i in range(n-4):
+    for i in range(n-6):
         bot.delete_message(msg.chat.id, msg.id-i)
     obj.clear_attributes()
     button_message(msg)
 
 def inline_btns_group(obj, chatid):
-    obj.get_list_group()  # формируем лист групп
+    obj.get_list_group()                        # формируем лист групп
     markup = types.InlineKeyboardMarkup()
-    i = 0  # счетчик групп для колбека
+    i = 0                                       # счетчик групп для колбека
 
     for group in obj.list_groups:
         if str(group) == 'None': continue
@@ -59,6 +59,43 @@ def inline_btns_group(obj, chatid):
         i += 1
         markup.add(btn)
     bot.send_message(chatid, "Отлично! Теперь нужно выбрать группу", reply_markup=markup)
+
+def inline_btns_edup(obj, chatid):
+    obj.get_list_edup()                         # формируем лист обр программ
+    markup = types.InlineKeyboardMarkup()
+    i = 0                                       # счетчик обр программ для колбека
+
+    for edup in obj.list_edup:
+        edup = str(edup)
+        if edup == 'None': continue
+        btn = types.InlineKeyboardButton(text=edup, callback_data=f'{i}edup')
+        i += 1
+        markup.add(btn)
+    bot.send_message(chatid, f"Образовательные программы {obj.napr.capitalize()}:", reply_markup=markup)
+
+def inline_btns_napr(obj, chatid):
+    obj.get_list_napr()                         # формируем лист направлений
+    markup = types.InlineKeyboardMarkup()
+    i = 0
+    for name in obj.list_napr:
+        if str(name) == 'None': continue
+        btn = types.InlineKeyboardButton(text=name, callback_data=f'{i}napr')
+        i += 1
+        markup.add(btn)
+
+    bot.send_message(chatid, f"Направления {obj.inst}:", reply_markup=markup)
+
+def inline_btns_inst(obj, chatid):
+    obj.get_list_inst()  # формируем лист направлений
+    markup = types.InlineKeyboardMarkup()
+    i = 0
+    for name in obj.list_insts:
+        if str(name) == 'None': continue
+        btn = types.InlineKeyboardButton(text=name, callback_data=f'{i}inst')
+        i += 1
+        markup.add(btn)
+
+    bot.send_message(chatid, f"Институты {obj.course}:", reply_markup=markup)
 
 
 bot = telebot.TeleBot(cf.token)
@@ -99,42 +136,22 @@ def callback_query(call):
     # получили курс
     if req[0][1:] == 'course':
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        msg = bot.send_message(call.message.chat.id, "Загрузка..")
+        bot.send_message(call.message.chat.id, "Загрузка..")
         course = int(str(req[0])[0])
         if course != my_direct.course:
             my_direct.clean_all()
             my_direct.set_course(course)
             my_direct.first_start()
 
-        markup = types.InlineKeyboardMarkup()
+        inline_btns_inst(my_direct, call.message.chat.id)
 
-        my_direct.get_list_inst()
-        i = 0
-        for name in my_direct.list_insts:
-            btn = types.InlineKeyboardButton(text=str(name), callback_data=f'{i}inst')
-            i+=1
-            markup.add(btn)
-
-        # bot.send_message(call.message.chat.id, f"Бакалавриат {course}-курс. Институты ГУУ:", reply_markup = markup)
-        bot.edit_message_text(f"Бакалавриат {course}-курс. Институты ГУУ:", chat_id = call.message.chat.id, message_id = msg.message_id, reply_markup=markup)
 
     # получили название института
     if req[0][1:] == 'inst':
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        markup = types.InlineKeyboardMarkup()
-
         my_direct.set_inst(my_direct.list_insts[int(req[0][:1])])      # добавили в наш объект выбранный институт
-        my_direct.get_list_napr()                                 # формируем лист направлений
 
-        i = 0
-        for name in my_direct.list_napr:
-            if str(name) == 'None':continue
-
-            btn = types.InlineKeyboardButton(text=name, callback_data=f'{i}napr')
-            i+=1
-            markup.add(btn)
-
-        bot.send_message(call.message.chat.id, f"Направления {my_direct.inst}:", reply_markup=markup)
+        inline_btns_napr(my_direct, call.message.chat.id)
 
     # получили название направления
     if req[0][1:] == 'napr':
@@ -158,7 +175,6 @@ def callback_query(call):
         my_direct.set_edup(my_direct.list_edup[int(req[0][:1])])
 
         inline_btns_group(my_direct, call.message.chat.id)
-
 
     # получили группу
     if req[0][1:] == 'group':
@@ -222,15 +238,30 @@ def message_reply(message):
         my_direct.group = ''
         inline_btns_group(my_direct, message.chat.id)
 
-
     if message.text.lower() == 'Изменить образовательную программу'.lower():
-        pass
+        my_direct.group = ''
+        my_direct.list_groups = ''
+        my_direct.edup = ''
+        inline_btns_edup(my_direct, message.chat.id)
 
     if message.text.lower() == 'Изменить направление'.lower():
-        pass
+        my_direct.group = ''
+        my_direct.list_groups = ''
+        my_direct.edup = ''
+        my_direct.list_edup = ''
+        my_direct.napr = ''
+        inline_btns_napr(my_direct, message.chat.id)
+
 
     if message.text.lower() == 'Изменить институт'.lower():
-        pass
+        my_direct.group = ''
+        my_direct.list_groups = ''
+        my_direct.edup = ''
+        my_direct.list_edup = ''
+        my_direct.napr = ''
+        my_direct.list_napr = ''
+        my_direct.inst = ''
+        inline_btns_inst(my_direct, message.chat.id)
 
 
 bot.infinity_polling()
