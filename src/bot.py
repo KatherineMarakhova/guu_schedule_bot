@@ -5,8 +5,63 @@ from Direct import *
 import time
 
 
-bot = telebot.TeleBot(cf.token)
+def fullsqd(obj, chatid):
+    msg = bot.send_message(chatid, "Загрузка..")
+    answer = obj.get_scd_full()
+    if len(answer) > 4096:
+        bot.edit_message_text(text='Текст расписания слишком большой!\nПожалуйста, выберите другой формат вывода',
+                              chat_id = chatid, message_id=msg.message_id)
+    else:
+        bot.edit_message_text(text=answer, chat_id = chatid, message_id=msg.message_id)
 
+def evenscd(obj, eveness, chatid):
+    answer = obj.get_scd_even(eveness)
+    bot.send_message(chatid, answer)
+
+def weekdayscd(chatid):
+    markup = types.InlineKeyboardMarkup(row_width=7)
+    btn1 = types.InlineKeyboardButton('ПН', callback_data='Понедельник')
+    btn2 = types.InlineKeyboardButton('ВТ', callback_data='Вторник')
+    btn3 = types.InlineKeyboardButton('СР', callback_data='Среда')
+    btn4 = types.InlineKeyboardButton('ЧТ', callback_data='Четверг')
+    btn5 = types.InlineKeyboardButton('ПТ', callback_data='Пятница')
+    btn6 = types.InlineKeyboardButton('СБ', callback_data='Суббота')
+    markup.add(btn1, btn2, btn3, btn4, btn5, btn6)
+    bot.send_message(chatid, "Выбери день недели: \n", reply_markup=markup)
+
+def repbtns(chatid):
+    repmarkup = types.ReplyKeyboardMarkup()
+    repmarkup.row('Расписание полностью')
+    repmarkup.row('Расписание четной недели')
+    repmarkup.row('Расписание нечетной недели')
+    repmarkup.row('Расписание по дням')
+    repmarkup.row('Изменить параметры')
+    repmarkup.row('Начать сначала')
+
+    bot.send_message(chatid, "Выбери формат вывода расписания\n", reply_markup=repmarkup)
+
+def clear_chat(obj, msg):
+    n = obj.msg_count
+    for i in range(n-4):
+        bot.delete_message(msg.chat.id, msg.id-i)
+    obj.clear_attributes()
+    button_message(msg)
+
+def inline_btns_group(obj, chatid):
+    obj.get_list_group()  # формируем лист групп
+    markup = types.InlineKeyboardMarkup()
+    i = 0  # счетчик групп для колбека
+
+    for group in obj.list_groups:
+        if str(group) == 'None': continue
+
+        btn = types.InlineKeyboardButton(text=group, callback_data=f'{i}group')
+        i += 1
+        markup.add(btn)
+    bot.send_message(chatid, "Отлично! Теперь нужно выбрать группу", reply_markup=markup)
+
+
+bot = telebot.TeleBot(cf.token)
 my_direct = Direct()              #создаем объект нашего класса
 
 
@@ -16,28 +71,19 @@ def button_message(message):
     markup = types.InlineKeyboardMarkup()
     btn = types.InlineKeyboardButton("Выбрать курс", callback_data = 'start')
     markup.add(btn)
-
-    bot.send_message(message.chat.id,'Привет! \nЯ бот-хранитель твоего распиcания!', reply_markup = markup)
-
-@bot.message_handler(commands=['full'])
-def button_message(message):
-    answer = my_direct.get_full_scd()
-    bot.send_message(message.chat.id, answer)
-
-# @bot.message_handler(content_types=['text'])
-# def message_reply(message):
-#     if message.text == "Выбрать курс":
-#         markup = types.InlineKeyboardMarkup()
-#
-#         for i in range(1, 5):
-#             btn = types.InlineKeyboardButton(text = f'{i}-курс', callback_data = f'{i}-курс')
-#             markup.add(btn)
-#         bot.send_message(message.chat.id, "Бакалавриат. Курсы: ", reply_markup = markup)
+    my_direct.msg_count = 1
+    if my_direct.course == '': #проверяем на первый запуск
+        bot.send_message(message.chat.id,'Привет! \nЯ бот-хранитель распиcания бакалавриата ГУУ!\n'
+                                     'Сейчас нужно будет выбрать курс, затем появится список институтов.', reply_markup = markup)
+    else:
+        my_direct.clear_attributes()
+        bot.send_message(message.chat.id, 'Начнем сначала.\nВыбирай курс, потом институт.', reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call:True)
 def callback_query(call):
     req = call.data.split('_')
+    my_direct.msg_count += 1
 
     if req[0] == 'start':
         # bot.delete_message(call.message.chat.id, call.message.message_id)
@@ -47,6 +93,7 @@ def callback_query(call):
         for i in range(1, 5):
             btn = types.InlineKeyboardButton(text=f'{i}-курс', callback_data=f'{i}course')
             markup.add(btn)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
         bot.send_message(call.message.chat.id, "Бакалавриат. Курсы: ", reply_markup=markup)
 
     # получили курс
@@ -93,12 +140,9 @@ def callback_query(call):
     if req[0][1:] == 'napr':
         bot.delete_message(call.message.chat.id, call.message.message_id)
         my_direct.set_napr(my_direct.list_napr[int(req[0][:1])])
-
-        my_direct.get_list_edup() # формируем лист обр программ
-
+        my_direct.get_list_edup()                           # формируем лист обр программ
         markup = types.InlineKeyboardMarkup()
-        # print(f'my_direct.list_edup: {my_direct.list_edup}')
-        i = 0
+        i = 0                                               # счетчик обр программ для колбека
 
         for edup in my_direct.list_edup:
             edup = str(edup)
@@ -106,26 +150,14 @@ def callback_query(call):
             btn = types.InlineKeyboardButton(text = edup, callback_data = f'{i}edup')
             i+=1
             markup.add(btn)
-        bot.send_message(call.message.chat.id, f"Образовательные программы {my_direct.napr}:", reply_markup = markup)
+        bot.send_message(call.message.chat.id, f"Образовательные программы {my_direct.napr.capitalize()}:", reply_markup = markup)
 
     # получили название обр программы
     if req[0][1:] == 'edup':
         bot.delete_message(call.message.chat.id, call.message.message_id)
         my_direct.set_edup(my_direct.list_edup[int(req[0][:1])])
 
-        my_direct.get_list_group()  # формируем лист групп
-
-        markup = types.InlineKeyboardMarkup()
-
-        i = 0
-        for group in my_direct.list_groups:
-            if str(group) == 'None': continue
-
-            btn = types.InlineKeyboardButton(text = group, callback_data = f'{i}group')
-            i+=1
-            markup.add(btn)
-        bot.send_message(call.message.chat.id, "Отлично! Теперь нужно выбрать группу", reply_markup = markup)
-
+        inline_btns_group(my_direct, call.message.chat.id)
 
 
     # получили группу
@@ -139,44 +171,66 @@ def callback_query(call):
                                                f"Образовательная программа: {my_direct.edup} \n"
                                                f"Группа: {my_direct.group} \n")
 
-        markup = types.InlineKeyboardMarkup(row_width=1)
-        btn1 = types.InlineKeyboardButton('расписание целиком', callback_data='fullscd')
-        btn2 = types.InlineKeyboardButton('расписание четной недели', callback_data='evenscd')
-        btn3 = types.InlineKeyboardButton('расписание нечетной недели', callback_data='oddscd')
-        btn4 = types.InlineKeyboardButton('расписание по дням', callback_data='weekdayscd')
-        markup.add(btn1, btn2, btn3, btn4)
+        repbtns(call.message.chat.id)
 
-        bot.send_message(call.message.chat.id, "Выбери формат вывода расписания: \n", reply_markup = markup)
+    # ВЫВОД РАСПИСАНИЯ ==========================================================
 
-    if str(req[0]) == 'fullscd':
-        msg = bot.send_message(call.message.chat.id, "Загрузка..")
-        answer = my_direct.get_scd_full()
-        if len(answer) > 4096:
-            bot.edit_message_text(text='Текст расписания слишком большой!\nПожалуйста, выберите другой формат', chat_id=call.message.chat.id, message_id=msg.message_id)
-        else:
-            bot.edit_message_text(text = answer, chat_id = call.message.chat.id, message_id = msg.message_id)
-
-    if req[0] == 'evenscd':
-        answer = my_direct.get_scd_even(eveness="ЧЁТ.")
-        bot.send_message(call.message.chat.id, answer)
-
-    if req[0] == 'oddscd':
-        answer = my_direct.get_scd_even(eveness="НЕЧЁТ.")
-        bot.send_message(call.message.chat.id, answer)
-
-    if req[0] == 'weekdayscd':
-        markup = types.InlineKeyboardMarkup(row_width=7)
-        btn1 = types.InlineKeyboardButton('ПН', callback_data='Понедельник')
-        btn2 = types.InlineKeyboardButton('ВТ', callback_data='Вторник')
-        btn3 = types.InlineKeyboardButton('СР', callback_data='Среда')
-        btn4 = types.InlineKeyboardButton('ЧТ', callback_data='Четверг')
-        btn5 = types.InlineKeyboardButton('ПТ', callback_data='Пятница')
-        btn6 = types.InlineKeyboardButton('СБ', callback_data='Суббота')
-        markup.add(btn1, btn2, btn3, btn4, btn5, btn6)
-        bot.send_message(call.message.chat.id, "Выбери день недели: \n", reply_markup=markup)
     weekdays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']
+
     if req[0] in weekdays:
         answer = my_direct.get_scd_weekday(req[0])
         bot.send_message(call.message.chat.id, answer)
+
+@bot.message_handler(content_types=['text'])
+def message_reply(message):
+    my_direct.msg_count += 1
+    chatid = message.chat.id
+
+    if message.text == "Расписание полностью":
+        fullsqd(my_direct, chatid)
+
+    if message.text == "Расписание четной недели":
+        evenscd(my_direct, 'Чёт.', chatid)
+
+    if message.text == "Расписание нечетной недели":
+        evenscd(my_direct, 'Нечёт.', chatid)
+
+    if message.text == "Расписание по дням":
+        weekdayscd(chatid)
+
+    if message.text == "Изменить параметры":
+        markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
+        markup.add('Изменить группу')
+        markup.add('Изменить образовательную программу')
+        markup.add('Изменить направление')
+        markup.add('Изменить институт')
+        bot.send_message(chatid, 'Выбери, что хочешь изменить', reply_markup=markup)
+
+    if message.text == "Начать сначала":
+        markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
+        markup.add('Сотри все')
+        markup.add('Оставь')
+        bot.send_message(chatid, 'Могу стереть все предыдущие сообщения?', reply_markup = markup)
+
+    if message.text.lower() == 'Сотри все'.lower():
+        clear_chat(my_direct, message)
+
+    if message.text.lower() == 'Оставь'.lower():
+        button_message(message) # запуск с команды старт
+
+    if message.text.lower() == 'Изменить группу'.lower():
+        my_direct.group = ''
+        inline_btns_group(my_direct, message.chat.id)
+
+
+    if message.text.lower() == 'Изменить образовательную программу'.lower():
+        pass
+
+    if message.text.lower() == 'Изменить направление'.lower():
+        pass
+
+    if message.text.lower() == 'Изменить институт'.lower():
+        pass
+
 
 bot.infinity_polling()

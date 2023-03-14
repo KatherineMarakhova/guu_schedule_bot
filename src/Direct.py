@@ -4,7 +4,7 @@ from pathlib import Path
 import selenium_fcs as sf
 
 class Direct:
-
+    msg_count = 0
     course = ''
     path = ''
     wb = ''
@@ -229,7 +229,7 @@ class Direct:
 
     # БЛОК ВЫВОДА РАСПИСАНИЯ ======================================================================
     def get_scd_full(self):
-        answer = f'Расписание для {self.edup.title()} {self.course}-{self.group}\n'
+        answer = f'Расписание для {self.edup.capitalize()} {self.course}-{self.group}\n'
         # получаем граничные индексы
         day = self.get_indexes(self.sheet, 'Понедельник')
         d_idx = int(day[1])
@@ -264,17 +264,17 @@ class Direct:
                 lesson += 1
 
             if i % 2 != 0:
-                answer += (f'{lesson}📍{time}\n- {even.title()}\n {sbj}\n\n')
+                answer += (f'{lesson}📍{time}\n- {even.capitalize()}\n {sbj}\n\n')
                 lesson += 1
             else:
-                answer += (f'- {even.title()}\n {sbj}\n\n')
+                answer += (f'- {even.capitalize()}\n {sbj}\n\n')
 
         return answer
 
     def get_scd_even(self, eveness = "ЧЁТ."):
 
         answer = f'Расписание для {self.edup} {self.course}-{self.group}\n'
-        answer += f'{eveness.title()} неделя\n'
+        answer += f'{eveness.capitalize()} неделя\n'
 
         # получаем граничные индексы
         day = self.get_indexes(self.sheet, 'Понедельник')
@@ -344,8 +344,22 @@ class Direct:
             if sbj == 'None': sbj = 'Занятий нет'
             if weekday.lower() == day.lower():
                 if i % 2 != 0:
-                    answer += (f'{lesson}📍{time}\n- {even.title()}\n {sbj}\n\n')
+                    answer += (f'{lesson}📍{time}\n- {even.capitalize()}\n {sbj}\n\n')
                     lesson += 1
                 else:
-                    answer += (f'- {even.title()}\n {sbj}\n\n')
+                    answer += (f'- {even.capitalize()}\n {sbj}\n\n')
         return answer
+
+    def clear_attributes(self):
+        self.course = ''
+        self.path = ''
+        self.wb = ''
+        self.sheet = ''
+        self.list_insts = []  # список институтов
+        self.inst = ''  # выбранный институт
+        self.list_edup = []
+        self.edup = ''
+        self.list_napr = []
+        self.napr = ''
+        self.list_groups = []
+        self.group = ''
