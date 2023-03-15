@@ -4,7 +4,6 @@ from pathlib import Path
 import selenium_fcs as sf
 
 class Direct:
-    msg_count = 0
     course = ''
     path = ''
     wb = ''
@@ -17,6 +16,9 @@ class Direct:
     napr = ''
     list_groups = []
     group = ''
+    msg_count = 0   # счетчик сообщений
+    check_msg = ''  # тут хранится id сообщения, которое надо изменить при выводе расписания по дням
+
 
     def set_path(self, path):
         self.path = path
@@ -105,7 +107,7 @@ class Direct:
         self.path = self.get_file_path()             # записываем путь скачанного файла
         self.unmerge_all_cells()                     # обрабатываем объединенные ячейки
         self.unmerge_institutes()                    # разделяем два института, хранящихся на одном листе
-        print(f'path: {self.path}')
+        # print(f'path: {self.path}')
         self.wb = load_workbook(self.path)
 
     def clean_all(self):

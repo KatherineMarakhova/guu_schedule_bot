@@ -3,6 +3,7 @@ import telebot
 from telebot import types
 from Direct import *
 import time
+import os
 
 
 def fullsqd(obj, chatid):
@@ -18,7 +19,7 @@ def evenscd(obj, eveness, chatid):
     answer = obj.get_scd_even(eveness)
     bot.send_message(chatid, answer)
 
-def weekdayscd(chatid):
+def weekdayscd(msg, obj):
     markup = types.InlineKeyboardMarkup(row_width=7)
     btn1 = types.InlineKeyboardButton('ПН', callback_data='Понедельник')
     btn2 = types.InlineKeyboardButton('ВТ', callback_data='Вторник')
@@ -27,7 +28,9 @@ def weekdayscd(chatid):
     btn5 = types.InlineKeyboardButton('ПТ', callback_data='Пятница')
     btn6 = types.InlineKeyboardButton('СБ', callback_data='Суббота')
     markup.add(btn1, btn2, btn3, btn4, btn5, btn6)
-    bot.send_message(chatid, "Выбери день недели: \n", reply_markup=markup)
+    msg = bot.send_message(msg.chat.id, "Выбери день недели: \n", reply_markup=markup)
+    # msg = bot.edit_message_text(text="Выбери день недели: \n", chat_id = msg.chat.id, message_id = msg.message_id, reply_markup=markup)
+    return msg
 
 def repbtns(chatid):
     repmarkup = types.ReplyKeyboardMarkup()
@@ -37,6 +40,7 @@ def repbtns(chatid):
     repmarkup.row('Расписание по дням')
     repmarkup.row('Изменить параметры')
     repmarkup.row('Начать сначала')
+    repmarkup.row('Обновить расписание')
 
     bot.send_message(chatid, "Выбери формат вывода расписания\n", reply_markup=repmarkup)
 
@@ -85,7 +89,8 @@ def inline_btns_napr(obj, chatid):
 
     bot.send_message(chatid, f"Направления {obj.inst}:", reply_markup=markup)
 
-def inline_btns_inst(obj, chatid):
+def inline_btns_inst(obj, chatid, msg=''):
+
     obj.get_list_inst()  # формируем лист направлений
     markup = types.InlineKeyboardMarkup()
     i = 0
@@ -95,12 +100,18 @@ def inline_btns_inst(obj, chatid):
         i += 1
         markup.add(btn)
 
-    bot.send_message(chatid, f"Институты {obj.course}:", reply_markup=markup)
+    if msg != '':
+        bot.edit_message_text(text=f"Институты {obj.course} курса:", chat_id = chatid, message_id=msg.message_id, reply_markup=markup)
+
+    else:
+        bot.send_message(chatid, f"Институты {obj.course} курса:", reply_markup=markup)
 
 
 bot = telebot.TeleBot(cf.token)
-my_direct = Direct()              #создаем объект нашего класса
-
+my_direct = Direct()                            #создаем объект нашего класса
+# current_time = time.strftime("%H:%M:%S")
+# print("The current time is", current_time)
+# if(current_time)
 
 @bot.message_handler(commands=['start'])
 def button_message(message):
@@ -115,7 +126,6 @@ def button_message(message):
     else:
         my_direct.clear_attributes()
         bot.send_message(message.chat.id, 'Начнем сначала.\nВыбирай курс, потом институт.', reply_markup=markup)
-
 
 @bot.callback_query_handler(func=lambda call:True)
 def callback_query(call):
@@ -136,14 +146,14 @@ def callback_query(call):
     # получили курс
     if req[0][1:] == 'course':
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        bot.send_message(call.message.chat.id, "Загрузка..")
+        msg = bot.send_message(call.message.chat.id, "Загрузка..")
         course = int(str(req[0])[0])
         if course != my_direct.course:
             my_direct.clean_all()
             my_direct.set_course(course)
             my_direct.first_start()
 
-        inline_btns_inst(my_direct, call.message.chat.id)
+        inline_btns_inst(my_direct, call.message.chat.id, msg)
 
 
     # получили название института
@@ -195,7 +205,10 @@ def callback_query(call):
 
     if req[0] in weekdays:
         answer = my_direct.get_scd_weekday(req[0])
-        bot.send_message(call.message.chat.id, answer)
+        # bot.send_message(call.message.chat.id, answer)
+        bot.edit_message_text(text=answer, chat_id=call.message.chat.id, message_id=call.message.message_id)
+        weekdayscd(call.message, my_direct)
+
 
 @bot.message_handler(content_types=['text'])
 def message_reply(message):
@@ -212,7 +225,12 @@ def message_reply(message):
         evenscd(my_direct, 'Нечёт.', chatid)
 
     if message.text == "Расписание по дням":
-        weekdayscd(chatid)
+
+        if my_direct.check_msg == '':
+            msg = weekdayscd(message, my_direct)
+            my_direct.check_msg = msg
+        else:
+            weekdayscd(message, my_direct)
 
     if message.text == "Изменить параметры":
         markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
@@ -233,6 +251,14 @@ def message_reply(message):
 
     if message.text.lower() == 'Оставь'.lower():
         button_message(message) # запуск с команды старт
+
+    if message.text.lower() == 'Обновить расписание'.lower():
+        msg = bot.send_message(message.chat.id, "Загрузка..")
+        os.remove(my_direct.path)
+        my_direct.first_start()         # тк курс у нас не меняется, то мы просто подгружаем и обрабатываем док с сайта
+        bot.edit_message_text(f'Распсиание для {my_direct.course} курса обновлено.', chat_id = message.chat.id, message_id = msg.message_id)
+        repbtns(message.chat.id)
+        pass
 
     if message.text.lower() == 'Изменить группу'.lower():
         my_direct.group = ''
