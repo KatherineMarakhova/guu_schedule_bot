@@ -186,7 +186,7 @@ class Direct:
                     for j in range(1, inst_idx[1]):
                         sheet2.cell(i, j).value = sheet1.cell(i, j).value
 
-                print(f'inst_idx[1]: {inst_idx[1]}')
+                # print(f'inst_idx[1]: {inst_idx[1]}')
                 # удлаляем ненужные столбцы с исходного листа
                 sheet1.delete_cols(idx=5, amount=(inst_idx[1] - 5))  # тут пока костыль в виде 4 - именно столько столбцов нужно отступить слева
                 # надо будет написать функцию добывающую этот индекс, чтобы было гибко

@@ -123,6 +123,7 @@ def button_message(message):
     if my_direct.course == '': #проверяем на первый запуск
         bot.send_message(message.chat.id,'Привет! \nЯ бот-хранитель распиcания бакалавриата ГУУ!\n'
                                      'Сейчас нужно будет выбрать курс, затем появится список институтов.', reply_markup = markup)
+
     else:
         my_direct.clear_attributes()
         bot.send_message(message.chat.id, 'Начнем сначала.\nВыбирай курс, потом институт.', reply_markup=markup)
@@ -206,7 +207,7 @@ def callback_query(call):
     if req[0] in weekdays:
         answer = my_direct.get_scd_weekday(req[0])
         # bot.send_message(call.message.chat.id, answer)
-        bot.edit_message_text(text=answer, chat_id=call.message.chat.id, message_id=call.message.message_id)
+        my_direct.week_msg = bot.edit_message_text(text=answer, chat_id=call.message.chat.id, message_id=call.message.message_id)
         weekdayscd(call.message, my_direct)
 
 
@@ -225,12 +226,7 @@ def message_reply(message):
         evenscd(my_direct, 'Нечёт.', chatid)
 
     if message.text == "Расписание по дням":
-
-        if my_direct.check_msg == '':
-            msg = weekdayscd(message, my_direct)
-            my_direct.check_msg = msg
-        else:
-            weekdayscd(message, my_direct)
+        weekdayscd(message, my_direct)
 
     if message.text == "Изменить параметры":
         markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
