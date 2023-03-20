@@ -1,7 +1,7 @@
 from openpyxl import *
 from openpyxl.utils import range_boundaries
 from pathlib import Path
-# import selenium_fcs as sf
+import selenium_fcs as sf
 
 class Direct:
     course = ''
@@ -127,11 +127,16 @@ class Direct:
     def get_file_path(self):
         with Path(r"../files") as direction:
             s = str(self.course) + "-курс-бакалавриат*.xlsx"
+            path = ''
             for f in direction.glob(s):
-                return f
-            # sf.get_file(self.course)  # скачиваем файл с сайта относительно курса
-            # for f in direction.glob(s):
-            #     return f
+                path = f
+                break
+            if path:
+                return path
+            else:
+                sf.get_file(self.course)  # скачиваем файл с сайта относительно курса
+                for f in direction.glob(s):
+                    return f
 
     # Обработка объединенных ячеек, создание
     def unmerge_all_cells(self):

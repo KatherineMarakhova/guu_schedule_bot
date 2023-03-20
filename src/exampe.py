@@ -26,50 +26,12 @@ from Direct import *
 # obj.set_edup('1')
 
 obj = Direct()
-obj.set_course(1)
-obj.first_start()
+obj.set_course(4)
+# obj.first_start()
+print(bool(obj.get_file_path()))
+# obj.get_list_inst()
+# print(f'Институты : {obj.list_insts}')
 
-obj.get_list_inst()
-print(f'Институты : {obj.list_insts}')
-
-# for inst in obj.list_insts:
-#     sheet = obj.wb[inst]
-#     print(obj.get_indexes(sheet, 'направление'))
-#     obj.set_inst(inst)
-#     obj.get_list_napr()
-#     print(f'Направления: {obj.list_napr}')
-
-
-obj.set_inst('ИГУиП 1 курс')
-sheet = obj.wb['ИГУиП 1 курс']
-obj.get_list_napr()
-print(f'naprs: {obj.list_napr}')
-obj.set_napr('МЕНЕДЖМЕНТ')
-obj.get_list_edup()
-print(f'edups: {obj.list_edup}')
-obj.set_edup('Урбанистика и управление городом')
-obj.get_list_group()
-print(f'groups {obj.list_groups}')
-obj.set_group(1)
-# print(obj.get_scd_full())
-print(obj.get_scd_weekday('Понедельник'))
-# print(f'get_indexes {obj.get_indexes(sheet, "направление")}')
-# print(obj.next_idx(sheet, 'политология'))
-# print(f'{obj.get_indexes_cat(sheet, "СОЦИОЛОГИЯ", "направление")}')
-# print(obj.next_idx_cat(sheet, "СОЦИОЛОГИЯ", 'направление'))
-
-# print(f'day {sheet.cell(10, 3).value}')
-# obj.set_inst('ИОМ 2 курс')
-# sheet = obj.wb['ИОМ 2 курс']
-# obj.get_list_napr()
-# print(f'naprs: {obj.list_napr}')
-# obj.set_napr('МЕНЕДЖМЕНТ')
-# obj.get_list_edup()
-# print(f'edups: {obj.list_edup}')
-
-# print(f'get_indexes {obj.get_indexes(sheet, "ПРИКЛАДНАЯ ИНФОРМАТИКА")}')
-# # print(obj.next_idx(sheet, 'политология'))
-# print(obj.next_idx_cat(sheet, 'ПРИКЛАДНАЯ ИНФОРМАТИКА', 'направление'))
 
 
 

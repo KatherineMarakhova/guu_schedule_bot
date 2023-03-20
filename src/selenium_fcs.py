@@ -8,6 +8,7 @@ def get_file(course):
     PATH = "/Users/katherine.marakhova/PycharmProjects/exampleBot/files"
     # Google Chrome
     options = webdriver.ChromeOptions()
+    options.add_argument('headless')
     prefs = {"download.default_directory": PATH}
     options.add_experimental_option("prefs", prefs)
     driver = webdriver.Chrome(options=options)
