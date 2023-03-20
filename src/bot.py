@@ -1,9 +1,11 @@
+from telebot.types import ReplyKeyboardRemove
+
 import config as cf
 import telebot
 from telebot import types
 from Direct import *
-import time
 import os
+
 
 
 def fullsqd(obj, chatid):
@@ -32,7 +34,7 @@ def weekdayscd(msg, obj):
     # msg = bot.edit_message_text(text="Выбери день недели: \n", chat_id = msg.chat.id, message_id = msg.message_id, reply_markup=markup)
     return msg
 
-def repbtns(chatid):
+def repbtns(chatid):                            # reply buttons
     repmarkup = types.ReplyKeyboardMarkup()
     repmarkup.row('Расписание полностью')
     repmarkup.row('Расписание четной недели')
@@ -40,7 +42,7 @@ def repbtns(chatid):
     repmarkup.row('Расписание по дням')
     repmarkup.row('Изменить параметры')
     repmarkup.row('Начать сначала')
-    repmarkup.row('Обновить расписание')
+    # repmarkup.row('Обновить расписание')
 
     bot.send_message(chatid, "Выбери формат вывода расписания\n", reply_markup=repmarkup)
 
@@ -91,7 +93,7 @@ def inline_btns_napr(obj, chatid):
 
 def inline_btns_inst(obj, chatid, msg=''):
 
-    obj.get_list_inst()  # формируем лист направлений
+    obj.get_list_inst()                         # формируем лист направлений
     markup = types.InlineKeyboardMarkup()
     i = 0
     for name in obj.list_insts:
@@ -126,7 +128,9 @@ def button_message(message):
 
     else:
         my_direct.clear_attributes()
-        bot.send_message(message.chat.id, 'Начнем сначала.\nВыбирай курс, потом институт.', reply_markup=markup)
+        msg = bot.send_message(message.chat.id, 'Загрузка..', reply_markup = ReplyKeyboardRemove())
+        bot.delete_message(message.chat.id, msg.id)
+        bot.send_message(text='Начнем сначала.\nВыбирай курс, потом институт.', chat_id = message.chat.id, reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call:True)
 def callback_query(call):
@@ -135,7 +139,7 @@ def callback_query(call):
 
     if req[0] == 'start':
         # bot.delete_message(call.message.chat.id, call.message.message_id)
-        bot.edit_message_text('Привет! \nЯ бот-хранитель твоего распиcания!', chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.edit_message_text('Привет! \nЯ бот-хранитель твоего распиcания!', chat_id = call.message.chat.id, message_id=call.message.message_id)
         markup = types.InlineKeyboardMarkup()
 
         for i in range(1, 5):
@@ -237,16 +241,18 @@ def message_reply(message):
         bot.send_message(chatid, 'Выбери, что хочешь изменить', reply_markup=markup)
 
     if message.text == "Начать сначала":
-        markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-        markup.add('Сотри все')
-        markup.add('Оставь')
-        bot.send_message(chatid, 'Могу стереть все предыдущие сообщения?', reply_markup = markup)
+        # markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
+        # markup.add('Сотри все')
+        # markup.add('Оставь')
+        # bot.send_message(chatid, 'Могу стереть все предыдущие сообщения?', reply_markup = markup)
 
-    if message.text.lower() == 'Сотри все'.lower():
-        clear_chat(my_direct, message)
+        button_message(message)
 
-    if message.text.lower() == 'Оставь'.lower():
-        button_message(message) # запуск с команды старт
+    # if message.text.lower() == 'Сотри все'.lower():
+    #     clear_chat(my_direct, message)
+    #
+    # if message.text.lower() == 'Оставь'.lower():
+    #     button_message(message) # запуск с команды старт
 
     if message.text.lower() == 'Обновить расписание'.lower():
         msg = bot.send_message(message.chat.id, "Загрузка..")
