@@ -1,6 +1,5 @@
 from telebot.types import ReplyKeyboardRemove
-
-# import config as cf
+import config as cf
 import telebot
 from telebot import types
 from Direct import *
@@ -108,8 +107,7 @@ def inline_btns_inst(obj, chatid, msg=''):
     else:
         bot.send_message(chatid, f"Институты {obj.course} курса:", reply_markup=markup)
 
-token = '5679216888:AAEnHl7wKQmR4mXwrqWQQIVGVztbqtINeBQ'
-bot = telebot.TeleBot(token)
+bot = telebot.TeleBot(cf.token)
 my_direct = Direct()                            #создаем объект нашего класса
 # current_time = time.strftime("%H:%M:%S")
 # print("The current time is", current_time)

@@ -1,7 +1,6 @@
 from openpyxl import *
 from openpyxl.utils import range_boundaries
 from pathlib import Path
-import selenium_fcs as sf
 from Direct import *
 
 

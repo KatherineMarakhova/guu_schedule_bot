@@ -1,7 +1,7 @@
 from openpyxl import *
 from openpyxl.utils import range_boundaries
 from pathlib import Path
-import selenium_fcs as sf
+import parsing
 
 class Direct:
     course = ''
@@ -133,8 +133,9 @@ class Direct:
                 break
             if path:
                 return path
+
             else:
-                sf.get_file(self.course)  # скачиваем файл с сайта относительно курса
+                parsing.get_file(course=self.course)
                 for f in direction.glob(s):
                     return f
 
