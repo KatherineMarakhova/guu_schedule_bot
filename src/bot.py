@@ -109,9 +109,11 @@ def inline_btns_inst(obj, chatid, msg=''):
 
 bot = telebot.TeleBot(cf.token)
 my_direct = Direct()                            #создаем объект нашего класса
-# current_time = time.strftime("%H:%M:%S")
-# print("The current time is", current_time)
-# if(current_time)
+
+
+# my_direct.update_docs()
+# schedule.every().day.at("14:41").do(my_direct.update_docs)
+
 
 @bot.message_handler(commands=['start'])
 def button_message(message):
@@ -152,7 +154,7 @@ def callback_query(call):
         msg = bot.send_message(call.message.chat.id, "Загрузка..")
         course = int(str(req[0])[0])
         if course != my_direct.course:
-            my_direct.clean_all()
+            my_direct.clear_attributes()
             my_direct.set_course(course)
             my_direct.first_start()
 
