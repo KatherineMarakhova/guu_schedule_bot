@@ -1,7 +1,7 @@
 from openpyxl import *
 from openpyxl.utils import range_boundaries
 from pathlib import Path
-import selenium_fcs as sf
+
 
 class Direct:
     course = ''
@@ -25,6 +25,7 @@ class Direct:
 
     def set_course(self, course):
         self.course = course
+        self.path = self.get_file_path(str(course) + "-курс-бакалавриат*.xlsx")
 
     def set_inst(self, inst):
         self.inst = inst
@@ -102,45 +103,40 @@ class Direct:
         return False
 
     #  БЛОК ПОЛУЧЕНИЯ И ОБРАБОТКИ ФАЙЛА ==========================================================
-    def first_start(self):
-
-        self.path = self.get_file_path()             # записываем путь скачанного файла
-        self.unmerge_all_cells()                     # обрабатываем объединенные ячейки
-        self.unmerge_institutes()                    # разделяем два института, хранящихся на одном листе
-        # print(f'path: {self.path}')
+    def first_start(self):                  # вся обработка доков вынесена за пределы, теперь нужно только их читать и все
         self.wb = load_workbook(self.path)
 
-    def clean_all(self):
-        self.path = ''
-        self.wb = ''
-        self.sheet = ''
-        self.list_insts = ''  # список институтов
-        self.inst = ''  # выбранный институт
-        self.list_edup = ''
-        self.edup = ''
-        self.list_napr = ''
-        self.napr = ''
-        self.list_groups = ''
-        self.group = ''
+    # def update_docs(self):
+    #     path = '../files'
+    #     try:
+    #         shutil.rmtree(path)
+    #         print("Папка удалена.")
+    #     except OSError as error:
+    #         print("Возникла ошибка.")
+    #
+    #     os.mkdir(path)
+    #     print("Папка создана.")
+    #
+    #     with Path(r"../files") as direction:
+    #
+    #         for i in range(1, 5):
+    #             s = str(self.course) + "-курс-бакалавриат*.xlsx"
+    #             parsing.get_file(i)                 # скачиваем новый файл
+    #             path = self.get_file_path(s)
+    #             self.unmerge_all_cells(path)
+    #             self.unmerge_institutes(path)
+
 
     # Получение пути интересующего нас файла
-    def get_file_path(self):
+    def get_file_path(self, filename):
         with Path(r"../files") as direction:
-            s = str(self.course) + "-курс-бакалавриат*.xlsx"
-            path = ''
-            for f in direction.glob(s):
-                path = f
-                break
-            if path:
-                return path
-            else:
-                sf.get_file(self.course)  # скачиваем файл с сайта относительно курса
-                for f in direction.glob(s):
+            for f in direction.glob(filename):
+                if f:
                     return f
 
     # Обработка объединенных ячеек, создание
-    def unmerge_all_cells(self):
-        workbook = load_workbook(self.path)
+    def unmerge_all_cells(self, path):
+        workbook = load_workbook(path)
         n = len(workbook.sheetnames)
         for i in range(n):
             sheet = workbook.worksheets[i]
@@ -152,11 +148,11 @@ class Direct:
                 for row in sheet.iter_rows(min_col=min_col, min_row=min_row, max_col=max_col, max_row=max_row):
                     for cell in row:
                         cell.value = top_left_cell_value
-            workbook.save(self.path)
+            workbook.save(path)
 
     # Разделение институтов, хранящихся на одном листе
-    def unmerge_institutes(self):
-        workbook = load_workbook(self.path)
+    def unmerge_institutes(self, path):
+        workbook = load_workbook(path)
         for s in workbook.sheetnames:
             if s.find(',') != -1:  # название нашего листа 'ИУПСиБК, ИИС 4 курс'
                 sheet1 = workbook[s]
@@ -168,7 +164,7 @@ class Direct:
                 # Теперь лист на котором мы были будет называться как sname, а новый как fname
                 sheet1.title = sname  # переименовыем в ИИС 4 курс
                 workbook.create_sheet(fname)  # создаем лист ИУПСиБК 4 курс
-                workbook.save(self.path)  # страхуемся, сохраняем наш док
+                workbook.save(path)  # страхуемся, сохраняем наш док
 
                 # переопределяем листы, так четче видно что где
                 sheet1 = workbook[sname]  # иис тут заполнено
@@ -195,7 +191,7 @@ class Direct:
                 # удлаляем ненужные столбцы с исходного листа
                 sheet1.delete_cols(idx=5, amount=(inst_idx[1] - 5))  # тут пока костыль в виде 4 - именно столько столбцов нужно отступить слева
                 # надо будет написать функцию добывающую этот индекс, чтобы было гибко
-                workbook.save(self.path)
+                workbook.save(path)
 
     # ✔️️ Получение индекса(строка, столбец). Используется для значений Институт, направление, образовательная программа и тд.(категории)
     def get_indexes(self, sheet, category):
@@ -217,7 +213,7 @@ class Direct:
                 if (val == name):
                     return (i, j)
 
-        # Получение индекса другого элемента по строке(не равного по названию)
+    # Получение индекса другого элемента по строке(не равного по названию)
     def next_idx_cat(self, sheet, name, category):
         row = self.get_indexes(self.sheet, category)[0]      #строка
         name = name.strip().lower()
