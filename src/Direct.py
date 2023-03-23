@@ -19,10 +19,6 @@ class Direct:
     msg_count = 0   # счетчик сообщений
     check_msg = ''  # тут хранится id сообщения, которое надо изменить при выводе расписания по дням
 
-
-    def set_path(self, path):
-        self.path = path
-
     def set_course(self, course):
         self.course = course
         self.path = self.get_file_path(str(course) + "-курс-бакалавриат*.xlsx")
@@ -105,27 +101,6 @@ class Direct:
     #  БЛОК ПОЛУЧЕНИЯ И ОБРАБОТКИ ФАЙЛА ==========================================================
     def first_start(self):                  # вся обработка доков вынесена за пределы, теперь нужно только их читать и все
         self.wb = load_workbook(self.path)
-
-    # def update_docs(self):
-    #     path = '../files'
-    #     try:
-    #         shutil.rmtree(path)
-    #         print("Папка удалена.")
-    #     except OSError as error:
-    #         print("Возникла ошибка.")
-    #
-    #     os.mkdir(path)
-    #     print("Папка создана.")
-    #
-    #     with Path(r"../files") as direction:
-    #
-    #         for i in range(1, 5):
-    #             s = str(self.course) + "-курс-бакалавриат*.xlsx"
-    #             parsing.get_file(i)                 # скачиваем новый файл
-    #             path = self.get_file_path(s)
-    #             self.unmerge_all_cells(path)
-    #             self.unmerge_institutes(path)
-
 
     # Получение пути интересующего нас файла
     def get_file_path(self, filename):
