@@ -1,2 +1,4 @@
 config.py
 ../files
+../neighbour/nohup.out
+__pycache__/
