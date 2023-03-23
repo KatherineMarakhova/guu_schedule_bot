@@ -47,8 +47,13 @@ def update_docs(self):
             path = self.get_file_path(s)
             self.unmerge_all_cells(path)
             self.unmerge_institutes(path)
+        sec = time.time()
+        struct = time.localtime(sec)
+        t = time.strftime('%d.%m.%Y %H:%M', struct)
+        print(f'Файлы были обновлены.{t}')
 
 schedule.every().day.at("03:00").do(update_docs)
 while True:
     schedule.run_pending()
     time.sleep(1) # wait one minute
+
