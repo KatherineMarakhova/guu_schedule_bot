@@ -2,7 +2,7 @@ from openpyxl import *
 from openpyxl.utils import range_boundaries
 from pathlib import Path
 from Direct import *
-
+import time
 
 # obj = Direct()
 # obj.set_course(2)
@@ -25,13 +25,13 @@ from Direct import *
 # obj.set_edup('1')
 
 obj = Direct()
-obj.set_course(4)
+# obj.set_course(4)
 # obj.first_start()
-print(bool(obj.get_file_path()))
+# print(bool(obj.get_file_path()))
 # obj.get_list_inst()
 # print(f'Институты : {obj.list_insts}')
 
-
+print(time.time())
 
 
 

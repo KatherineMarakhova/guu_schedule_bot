@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import os
 import shutil
 from pathlib import Path
+from src.bot import message_to_makareshka
 
 # НЕЗАБЫВАТЬ ЗАПУСКАТЬ ЭТОТ ФАЙЛ ЧЕРЕЗ nohup python MyScheduledProgram.py &
 
@@ -50,7 +51,7 @@ def update_docs(self):
         sec = time.time()
         struct = time.localtime(sec)
         t = time.strftime('%d.%m.%Y %H:%M', struct)
-        print(f'Файлы были обновлены.{t}')
+        message_to_makareshka(t)
 
 schedule.every().day.at("03:00").do(update_docs)
 while True:
