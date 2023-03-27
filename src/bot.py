@@ -1,5 +1,5 @@
 from telebot.types import ReplyKeyboardRemove
-import config as cf
+import config
 import telebot
 from telebot import types
 from Direct import *
@@ -7,7 +7,7 @@ import os
 
 
 def message_to_makareshka(time):
-    bot.send_message(chat_id=cf.makareshka, text=f"Файлы были обновлены. {time}")
+    bot.send_message(chat_id=config.makareshka, text=f"Файлы были обновлены. {time}")
 
 def fullsqd(obj, chatid):
     msg = bot.send_message(chatid, "Загрузка..")
@@ -109,7 +109,7 @@ def inline_btns_inst(obj, chatid, msg=''):
     else:
         bot.send_message(chatid, f"Институты {obj.course} курса:", reply_markup=markup)
 
-bot = telebot.TeleBot(cf.token)
+bot = telebot.TeleBot(config.token)
 my_direct = Direct()                            #создаем объект нашего класса
 
 

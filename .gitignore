@@ -1,0 +1,5 @@
+config.py
+../files
+../neighbour/nohup.out
+__pycache__/
+src/example.py
