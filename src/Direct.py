@@ -1,7 +1,5 @@
 from openpyxl import *
-from openpyxl.utils import range_boundaries
 from pathlib import Path
-
 
 class Direct:
     course = ''
@@ -109,64 +107,6 @@ class Direct:
                 if f:
                     return f
 
-    # # Обработка объединенных ячеек, создание
-    # def unmerge_all_cells(self, path):
-    #     workbook = load_workbook(path)
-    #     n = len(workbook.sheetnames)
-    #     for i in range(n):
-    #         sheet = workbook.worksheets[i]
-    #         set_merges = sorted(sheet.merged_cells.ranges.copy())
-    #         for cell_group in set_merges:
-    #             min_col, min_row, max_col, max_row = range_boundaries(str(cell_group))
-    #             top_left_cell_value = sheet.cell(row=min_row, column=min_col).value
-    #             sheet.unmerge_cells(str(cell_group))
-    #             for row in sheet.iter_rows(min_col=min_col, min_row=min_row, max_col=max_col, max_row=max_row):
-    #                 for cell in row:
-    #                     cell.value = top_left_cell_value
-    #         workbook.save(path)
-
-    # Разделение институтов, хранящихся на одном листе
-    # def unmerge_institutes(self, path):
-    #     workbook = load_workbook(path)
-    #     for s in workbook.sheetnames:
-    #         if s.find(',') != -1:  # название нашего листа 'ИУПСиБК, ИИС 4 курс'
-    #             sheet1 = workbook[s]
-    #
-    #             t = s.find('курс') - 2  # вычленяем курс из названия листа
-    #             z = s.find(',')  # находим позицию запятой
-    #             fname = s[:z] + ' ' + s[t:]  # иупсибк
-    #             sname = s[z + 2:]  # иис
-    #             # Теперь лист на котором мы были будет называться как sname, а новый как fname
-    #             sheet1.title = sname  # переименовыем в ИИС 4 курс
-    #             workbook.create_sheet(fname)  # создаем лист ИУПСиБК 4 курс
-    #             workbook.save(path)  # страхуемся, сохраняем наш док
-    #
-    #             # переопределяем листы, так четче видно что где
-    #             sheet1 = workbook[sname]  # иис тут заполнено
-    #             sheet2 = workbook[fname]  # иупсибк тут пусто
-    #
-    #             last_inst_name = ''
-    #             y, x = self.get_indexes(sheet1, 'ИНСТИТУТ')
-    #             for i in range(1, sheet1.max_column):
-    #                 # val = sheet1[y][i].value
-    #                 val = sheet1.cell(y, i).value
-    #                 if val != 'None':
-    #                     last_inst_name = val
-    #
-    #             inst_idx = self.get_indexes(sheet1, last_inst_name)  # индекс с которого начинается второй институт(ИИС)
-    #
-    #             # print(f'Последний институт {last_inst_name}, находится {inst_idx}')
-    #
-    #             # заполняем новый лист(ИУПСиБК)
-    #             for i in range(1, sheet1.max_row):
-    #                 for j in range(1, inst_idx[1]):
-    #                     sheet2.cell(i, j).value = sheet1.cell(i, j).value
-    #
-    #             # print(f'inst_idx[1]: {inst_idx[1]}')
-    #             # удлаляем ненужные столбцы с исходного листа
-    #             sheet1.delete_cols(idx=5, amount=(inst_idx[1] - 5))  # тут пока костыль в виде 4 - именно столько столбцов нужно отступить слева
-    #             # надо будет написать функцию добывающую этот индекс, чтобы было гибко
-    #             workbook.save(path)
 
     # ✔️️ Получение индекса(строка, столбец). Используется для значений Институт, направление, образовательная программа и тд.(категории)
     def get_indexes(self, sheet, category):

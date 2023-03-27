@@ -136,7 +136,7 @@ def update_docs():
         bot.send_message(chat_id=config.makareshka, text = 'я обновил расписание')
 
 #Часть, отвечающая за своевременный запуск кода
-schedule.every().day.at("14:04").do(update_docs)
+schedule.every().day.at("03:00").do(update_docs)
 while True:
     schedule.run_pending()
     time.sleep(1) # wait one minute

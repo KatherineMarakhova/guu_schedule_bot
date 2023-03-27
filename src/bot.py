@@ -5,10 +5,6 @@ from telebot import types
 from Direct import *
 import os
 
-
-def message_to_makareshka(time):
-    bot.send_message(chat_id=config.makareshka, text=f"Файлы были обновлены. {time}")
-
 def fullsqd(obj, chatid):
     msg = bot.send_message(chatid, "Загрузка..")
     answer = obj.get_scd_full()
@@ -104,13 +100,13 @@ def inline_btns_inst(obj, chatid, msg=''):
         markup.add(btn)
 
     if msg != '':
-        bot.edit_message_text(text=f"Институты {obj.course} курса:", chat_id = chatid, message_id=msg.message_id, reply_markup=markup)
+        bot.edit_message_text(text=f"Институты {obj.course} курса:", chat_id = chatid, message_id = msg.message_id, reply_markup=markup)
 
     else:
         bot.send_message(chatid, f"Институты {obj.course} курса:", reply_markup=markup)
 
 bot = telebot.TeleBot(config.token)
-my_direct = Direct()                            #создаем объект нашего класса
+user_direct = Direct()                            #создаем объект нашего класса
 
 
 # my_direct.update_docs()
@@ -123,13 +119,13 @@ def button_message(message):
     markup = types.InlineKeyboardMarkup()
     btn = types.InlineKeyboardButton("Выбрать курс", callback_data = 'start')
     markup.add(btn)
-    my_direct.msg_count = 1
-    if my_direct.course == '': #проверяем на первый запуск
+    user_direct.msg_count = 1
+    if user_direct.course == '': #проверяем на первый запуск
         bot.send_message(message.chat.id,'Привет! \nЯ бот-хранитель распиcания бакалавриата ГУУ!\n'
                                      'Сейчас нужно будет выбрать курс, затем появится список институтов.', reply_markup = markup)
 
     else:
-        my_direct.clear_attributes()
+        user_direct.clear_attributes()
         msg = bot.send_message(message.chat.id, 'Загрузка..', reply_markup = ReplyKeyboardRemove())
         bot.delete_message(message.chat.id, msg.id)
         bot.send_message(text='Начнем сначала.\nВыбирай курс, потом институт.', chat_id = message.chat.id, reply_markup=markup)
@@ -137,7 +133,7 @@ def button_message(message):
 @bot.callback_query_handler(func=lambda call:True)
 def callback_query(call):
     req = call.data.split('_')
-    my_direct.msg_count += 1
+    user_direct.msg_count += 1
 
     if req[0] == 'start':
         # bot.delete_message(call.message.chat.id, call.message.message_id)
@@ -155,54 +151,54 @@ def callback_query(call):
         bot.delete_message(call.message.chat.id, call.message.message_id)
         msg = bot.send_message(call.message.chat.id, "Загрузка..")
         course = int(str(req[0])[0])
-        if course != my_direct.course:
-            my_direct.clear_attributes()
-            my_direct.set_course(course)
-            my_direct.first_start()
+        if course != user_direct.course:
+            user_direct.clear_attributes()
+            user_direct.set_course(course)
+            user_direct.first_start()
 
-        inline_btns_inst(my_direct, call.message.chat.id, msg)
+        inline_btns_inst(user_direct, call.message.chat.id, msg)
 
 
     # получили название института
     if req[0][1:] == 'inst':
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        my_direct.set_inst(my_direct.list_insts[int(req[0][:1])])      # добавили в наш объект выбранный институт
+        user_direct.set_inst(user_direct.list_insts[int(req[0][:1])])      # добавили в наш объект выбранный институт
 
-        inline_btns_napr(my_direct, call.message.chat.id)
+        inline_btns_napr(user_direct, call.message.chat.id)
 
     # получили название направления
     if req[0][1:] == 'napr':
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        my_direct.set_napr(my_direct.list_napr[int(req[0][:1])])
-        my_direct.get_list_edup()                           # формируем лист обр программ
+        user_direct.set_napr(user_direct.list_napr[int(req[0][:1])])
+        user_direct.get_list_edup()                           # формируем лист обр программ
         markup = types.InlineKeyboardMarkup()
         i = 0                                               # счетчик обр программ для колбека
 
-        for edup in my_direct.list_edup:
+        for edup in user_direct.list_edup:
             edup = str(edup)
             if edup == 'None': continue
             btn = types.InlineKeyboardButton(text = edup, callback_data = f'{i}edup')
             i+=1
             markup.add(btn)
-        bot.send_message(call.message.chat.id, f"Образовательные программы {my_direct.napr.capitalize()}:", reply_markup = markup)
+        bot.send_message(call.message.chat.id, f"Образовательные программы {user_direct.napr.capitalize()}:", reply_markup = markup)
 
     # получили название обр программы
     if req[0][1:] == 'edup':
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        my_direct.set_edup(my_direct.list_edup[int(req[0][:1])])
+        user_direct.set_edup(user_direct.list_edup[int(req[0][:1])])
 
-        inline_btns_group(my_direct, call.message.chat.id)
+        inline_btns_group(user_direct, call.message.chat.id)
 
     # получили группу
     if req[0][1:] == 'group':
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        my_direct.set_group(my_direct.list_groups[int(req[0][:1])])
+        user_direct.set_group(user_direct.list_groups[int(req[0][:1])])
 
         bot.send_message(call.message.chat.id, "Настройка завершена!✅\n"
-                                               f"Курс: {my_direct.course} \n"
-                                               f"Направление подготовки: {my_direct.napr} \n"
-                                               f"Образовательная программа: {my_direct.edup} \n"
-                                               f"Группа: {my_direct.group} \n")
+                                               f"Курс: {user_direct.course} \n"
+                                               f"Направление подготовки: {user_direct.napr} \n"
+                                               f"Образовательная программа: {user_direct.edup} \n"
+                                               f"Группа: {user_direct.group} \n")
 
         repbtns(call.message.chat.id)
 
@@ -211,28 +207,28 @@ def callback_query(call):
     weekdays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']
 
     if req[0] in weekdays:
-        answer = my_direct.get_scd_weekday(req[0])
+        answer = user_direct.get_scd_weekday(req[0])
         # bot.send_message(call.message.chat.id, answer)
-        my_direct.week_msg = bot.edit_message_text(text=answer, chat_id=call.message.chat.id, message_id=call.message.message_id)
-        weekdayscd(call.message, my_direct)
+        user_direct.week_msg = bot.edit_message_text(text=answer, chat_id=call.message.chat.id, message_id=call.message.message_id)
+        weekdayscd(call.message, user_direct)
 
 
 @bot.message_handler(content_types=['text'])
 def message_reply(message):
-    my_direct.msg_count += 1
+    user_direct.msg_count += 1
     chatid = message.chat.id
 
     if message.text == "Расписание полностью":
-        fullsqd(my_direct, chatid)
+        fullsqd(user_direct, chatid)
 
     if message.text == "Расписание четной недели":
-        evenscd(my_direct, 'Чёт.', chatid)
+        evenscd(user_direct, 'Чёт.', chatid)
 
     if message.text == "Расписание нечетной недели":
-        evenscd(my_direct, 'Нечёт.', chatid)
+        evenscd(user_direct, 'Нечёт.', chatid)
 
     if message.text == "Расписание по дням":
-        weekdayscd(message, my_direct)
+        weekdayscd(message, user_direct)
 
     if message.text == "Изменить параметры":
         markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
@@ -258,40 +254,40 @@ def message_reply(message):
 
     if message.text.lower() == 'Обновить расписание'.lower():
         msg = bot.send_message(message.chat.id, "Загрузка..")
-        os.remove(my_direct.path)
-        my_direct.first_start()         # тк курс у нас не меняется, то мы просто подгружаем и обрабатываем док с сайта
-        bot.edit_message_text(f'Распсиание для {my_direct.course} курса обновлено.', chat_id = message.chat.id, message_id = msg.message_id)
+        # os.remove(my_direct.path)
+        user_direct.first_start()         # тк курс у нас не меняется, то мы просто подгружаем и обрабатываем док с сайта
+        bot.edit_message_text(f'Распсиание для {user_direct.course} курса обновлено.', chat_id = message.chat.id, message_id = msg.message_id)
         repbtns(message.chat.id)
         pass
 
     if message.text.lower() == 'Изменить группу'.lower():
-        my_direct.group = ''
-        inline_btns_group(my_direct, message.chat.id)
+        user_direct.group = ''
+        inline_btns_group(user_direct, message.chat.id)
 
     if message.text.lower() == 'Изменить образовательную программу'.lower():
-        my_direct.group = ''
-        my_direct.list_groups = ''
-        my_direct.edup = ''
-        inline_btns_edup(my_direct, message.chat.id)
+        user_direct.group = ''
+        user_direct.list_groups = ''
+        user_direct.edup = ''
+        inline_btns_edup(user_direct, message.chat.id)
 
     if message.text.lower() == 'Изменить направление'.lower():
-        my_direct.group = ''
-        my_direct.list_groups = ''
-        my_direct.edup = ''
-        my_direct.list_edup = ''
-        my_direct.napr = ''
-        inline_btns_napr(my_direct, message.chat.id)
+        user_direct.group = ''
+        user_direct.list_groups = ''
+        user_direct.edup = ''
+        user_direct.list_edup = ''
+        user_direct.napr = ''
+        inline_btns_napr(user_direct, message.chat.id)
 
 
     if message.text.lower() == 'Изменить институт'.lower():
-        my_direct.group = ''
-        my_direct.list_groups = ''
-        my_direct.edup = ''
-        my_direct.list_edup = ''
-        my_direct.napr = ''
-        my_direct.list_napr = ''
-        my_direct.inst = ''
-        inline_btns_inst(my_direct, message.chat.id)
+        user_direct.group = ''
+        user_direct.list_groups = ''
+        user_direct.edup = ''
+        user_direct.list_edup = ''
+        user_direct.napr = ''
+        user_direct.list_napr = ''
+        user_direct.inst = ''
+        inline_btns_inst(user_direct, message.chat.id)
 
 
 bot.infinity_polling()
