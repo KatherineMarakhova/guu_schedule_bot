@@ -98,14 +98,13 @@ class Direct:
 
     #  БЛОК ПОЛУЧЕНИЯ И ОБРАБОТКИ ФАЙЛА ==========================================================
     def first_start(self):                  # вся обработка доков вынесена за пределы, теперь нужно только их читать и все
-        self.wb = load_workbook(self.path)
+        self.wb = load_workbook(str(self.path))
 
     # Получение пути интересующего нас файла
     def get_file_path(self, course):
         with Path(r"../files") as direction:
             for f in direction.glob(str(course) + "-курс-бакалавриат*.xlsx"):
-                if f:
-                    return f
+                if f: return f
 
 
     # ✔️️ Получение индекса(строка, столбец). Используется для значений Институт, направление, образовательная программа и тд.(категории)
