@@ -3,7 +3,7 @@ import config
 import telebot
 from telebot import types
 from Direct import *
-import os
+
 
 def fullsqd(obj, chatid):
     msg = bot.send_message(chatid, "Загрузка..")

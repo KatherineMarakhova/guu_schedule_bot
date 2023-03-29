@@ -19,7 +19,7 @@ class Direct:
 
     def set_course(self, course):
         self.course = course
-        self.path = self.get_file_path(str(course) + "-курс-бакалавриат*.xlsx")
+        self.path = self.get_file_path(course)
 
     def set_inst(self, inst):
         self.inst = inst
@@ -101,9 +101,9 @@ class Direct:
         self.wb = load_workbook(self.path)
 
     # Получение пути интересующего нас файла
-    def get_file_path(self, filename):
+    def get_file_path(self, course):
         with Path(r"../files") as direction:
-            for f in direction.glob(filename):
+            for f in direction.glob(str(course) + "-курс-бакалавриат*.xlsx"):
                 if f:
                     return f
 

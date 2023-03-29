@@ -1,4 +1,5 @@
 config.py
+neighbour/tokens.txt
 ../files
 ../neighbour/nohup.out
 __pycache__/
