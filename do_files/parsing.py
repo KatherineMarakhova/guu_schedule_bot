@@ -1,5 +1,4 @@
 import requests
-import schedule
 import time
 import wget
 from bs4 import BeautifulSoup
@@ -9,21 +8,10 @@ from pathlib import Path
 import telebot
 from openpyxl import *
 from openpyxl.utils import range_boundaries
-import sys
-sys.path.append('../../')
-import config
-
-with open('tokens.txt', 'r') as f:
-    lines = f.readlines()
-    token = lines[0]
-    makareshka_token = lines[1]
-    print(f'marareshka: {makareshka_token}')
-# for line in f:
-#     line
-
-bot = telebot.TeleBot(config.token)
 
 # НЕЗАБЫВАТЬ ЗАПУСКАТЬ ЭТОТ ФАЙЛ ЧЕРЕЗ nohup python parsing.py
+
+bot = telebot.TeleBot('5679216888:AAEnHl7wKQmR4mXwrqWQQIVGVztbqtINeBQ')
 
 """
 Что делает этот файл:
@@ -128,7 +116,7 @@ def update_docs():
         # print("Папка удалена.")
     except OSError as error:
         print(f"Возникла ошибка: {error}")
-        bot.send_message(chat_id = config.makareshka, text =f"Возникла ошибка: {error}")
+        # bot.send_message(chat_id = config.makareshka, text =f"Возникла ошибка: {error}")
     os.mkdir(path)
     # print("Папка создана.")
 
@@ -143,15 +131,17 @@ def update_docs():
         sec = time.time()
         struct = time.localtime(sec)
         t = time.strftime('%d.%m.%Y %H:%M', struct)
-        bot.send_message(chat_id=config.makareshka, text ='я обновил расписание')
+        # bot.send_message(chat_id=config.makareshka, text ='я обновил расписание')
 
 #Часть, отвечающая за своевременный запуск кода
-schedule.every().day.at("03:00").do(update_docs)
+# schedule.every().day.at("03:00").do(update_docs)
+
 while True:
-    schedule.run_pending()
-    time.sleep(1) # wait one minute
-
-# update_docs()
-
-
-
+    sec = time.time()
+    struct = time.localtime(sec)
+    t = time.strftime('%H:%M', struct)
+    if t == '09:00':
+        try:
+            update_docs()
+        except:
+            bot.send_message(chat_id='479601165', text='❗️ERROR❗\nВозникла ошибка при обновлении файлов.')

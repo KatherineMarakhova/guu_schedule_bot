@@ -1,6 +1,7 @@
 from openpyxl import *
 from pathlib import Path
 
+
 class Direct:
     course = ''
     path = ''
