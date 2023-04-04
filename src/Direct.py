@@ -285,7 +285,8 @@ class Direct:
     def add_token(self, token):
         with open('tokens.txt', 'a') as f:
             k = False
-            for line in f.readlines():
+            lines = f.readlines()
+            for line in lines:
                 if str(line).find(token)!=-1:
                     k = True
                     print('Такой токен уже есть в базе')
