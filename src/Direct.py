@@ -287,7 +287,7 @@ class Direct:
         with open('tokens.txt') as file:
             for line in file:
                 if str(line).find(str(token)) != -1:
-                    print('нашел')
+                    # print('нашел')
                     is_here = True
                     break
         if not is_here:
