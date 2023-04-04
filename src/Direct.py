@@ -283,13 +283,13 @@ class Direct:
         self.group = ''
 
     def add_token(self, token):
-        with open('tokens.txt', 'a') as f:
-            k = False
-            lines = f.readlines()
-            for line in lines:
-                if str(line).find(token)!=-1:
-                    k = True
-                    print('Такой токен уже есть в базе')
-            if k == False:
-                f.write(f'{token}\n')
-                print('Добавил новый токен')
+        is_here = False
+        with open('tokens.txt') as file:
+            for line in file:
+                if str(line).find(str(token)) != -1:
+                    print('нашел')
+                    is_here = True
+                    break
+        if not is_here:
+            with open('tokens.txt', 'a') as file:
+                file.write(f'\n{token}')
