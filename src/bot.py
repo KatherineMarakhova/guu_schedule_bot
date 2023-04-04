@@ -4,7 +4,6 @@ import telebot
 from telebot import types
 from Direct import *
 
-
 def fullsqd(obj, chatid):
     msg = bot.send_message(chatid, "Загрузка..")
     answer = obj.get_scd_full()
@@ -108,11 +107,6 @@ def inline_btns_inst(obj, chatid, msg=''):
 bot = telebot.TeleBot(config.token)
 user_direct = Direct()                            #создаем объект нашего класса
 
-
-# my_direct.update_docs()
-# schedule.every().day.at("14:41").do(my_direct.update_docs)
-
-
 @bot.message_handler(commands=['start'])
 def button_message(message):
     # markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
@@ -120,6 +114,8 @@ def button_message(message):
     btn = types.InlineKeyboardButton("Выбрать курс", callback_data = 'start')
     markup.add(btn)
     user_direct.msg_count = 1
+    user_direct.add_token(message.chat.id)
+
     if user_direct.course == '': #проверяем на первый запуск
         bot.send_message(message.chat.id,'Привет! \nЯ бот-хранитель распиcания бакалавриата ГУУ!\n'
                                      'Сейчас нужно будет выбрать курс, затем появится список институтов.', reply_markup = markup)
@@ -157,7 +153,6 @@ def callback_query(call):
             user_direct.first_start()
 
         inline_btns_inst(user_direct, call.message.chat.id, msg)
-
 
     # получили название института
     if req[0][1:] == 'inst':

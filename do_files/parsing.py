@@ -6,10 +6,8 @@ import os
 import shutil
 from pathlib import Path
 import telebot
-from openpyxl import *
+from openpyxl import load_workbook
 from openpyxl.utils import range_boundaries
-
-# НЕЗАБЫВАТЬ ЗАПУСКАТЬ ЭТОТ ФАЙЛ ЧЕРЕЗ nohup python parsing.py
 
 bot = telebot.TeleBot('5679216888:AAEnHl7wKQmR4mXwrqWQQIVGVztbqtINeBQ')
 
@@ -55,6 +53,8 @@ def unmerge_all_cells(path):
                 for cell in row:
                     cell.value = top_left_cell_value
         workbook.save(path)
+        workbook.close()
+
 
 #Обработка файла: разделение объединенных институтов, вынос одного на другой лист
 def unmerge_institutes(path):
@@ -98,6 +98,8 @@ def unmerge_institutes(path):
             sheet1.delete_cols(idx=5, amount=(inst_idx[1] - 5))  # тут пока костыль в виде 4 - именно столько столбцов нужно отступить слева
             # надо будет написать функцию добывающую этот индекс, чтобы было гибко
             workbook.save(path)
+            workbook.close()
+
 
 #Вспомогательная функция получения индекса элемента
 def get_indexes(sheet, category):
@@ -116,7 +118,7 @@ def update_docs():
         # print("Папка удалена.")
     except OSError as error:
         print(f"Возникла ошибка: {error}")
-        # bot.send_message(chat_id = config.makareshka, text =f"Возникла ошибка: {error}")
+        bot.send_message(chat_id = '479601165', text = f"Возникла ошибка: {error}")
     os.mkdir(path)
     # print("Папка создана.")
 
@@ -128,20 +130,15 @@ def update_docs():
             # print(f'path: {path}')
             unmerge_all_cells(path)
             unmerge_institutes(path)
-        sec = time.time()
-        struct = time.localtime(sec)
-        t = time.strftime('%d.%m.%Y %H:%M', struct)
-        # bot.send_message(chat_id=config.makareshka, text ='я обновил расписание')
-
-#Часть, отвечающая за своевременный запуск кода
-# schedule.every().day.at("03:00").do(update_docs)
 
 while True:
     sec = time.time()
     struct = time.localtime(sec)
     t = time.strftime('%H:%M', struct)
-    if t == '09:00':
-        try:
-            update_docs()
-        except:
-            bot.send_message(chat_id='479601165', text='❗️ERROR❗\nВозникла ошибка при обновлении файлов.')
+    if t == '11:27':
+        update_docs()
+
+        with open('upd_logs.txt', 'w') as logs_file:
+            date = time.strftime('%d %B %H:%M')
+            logs_file.write(f'Файлы с расписанием были обновлены. {date}')
+

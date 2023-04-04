@@ -1,4 +1,4 @@
-from openpyxl import *
+from openpyxl import load_workbook
 from pathlib import Path
 
 
@@ -97,7 +97,7 @@ class Direct:
                 return True
         return False
 
-    #  БЛОК ПОЛУЧЕНИЯ И ОБРАБОТКИ ФАЙЛА ==========================================================
+    # БЛОК ПОЛУЧЕНИЯ И ОБРАБОТКИ ФАЙЛА ==========================================================
     def first_start(self):                  # вся обработка доков вынесена за пределы, теперь нужно только их читать и все
         self.wb = load_workbook(str(self.path))
 
@@ -108,7 +108,7 @@ class Direct:
                 if f: return f
 
 
-    # ✔️️ Получение индекса(строка, столбец). Используется для значений Институт, направление, образовательная программа и тд.(категории)
+    # Получение индекса(строка, столбец). Используется для значений Институт, направление, образовательная программа и тд.(категории)
     def get_indexes(self, sheet, category):
         category = (category.strip()).lower()
         for i in range(1, sheet.max_row):
@@ -281,3 +281,14 @@ class Direct:
         self.napr = ''
         self.list_groups = []
         self.group = ''
+
+    def add_token(self, token):
+        with open('tokens.txt', 'a') as f:
+            k = False
+            for line in f.readlines():
+                if str(line).find(token)!=-1:
+                    k = True
+                    print('Такой токен уже есть в базе')
+            if k == False:
+                f.write(f'{token}\n')
+                print('Добавил новый токен')

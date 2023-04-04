@@ -1,7 +1,3 @@
-config.py
-../do_files
 ../files
-../neighbour/nohup.out
-__pycache__/
 src/example.py
-file_update_info.txt
+config.py
