@@ -1,6 +1,7 @@
 import requests
 import time
 import wget
+import urllib.request
 from bs4 import BeautifulSoup
 import os
 import shutil
@@ -12,7 +13,7 @@ from openpyxl.utils import range_boundaries
 bot = telebot.TeleBot('5679216888:AAEnHl7wKQmR4mXwrqWQQIVGVztbqtINeBQ')
 
 """
-Что делает этот файл:
+Что делает этот скрипт:
 Когда подходит запланированное время он
 1. удаляет целиком папку со старыми файлами
 2. создает новую папку
@@ -20,23 +21,23 @@ bot = telebot.TeleBot('5679216888:AAEnHl7wKQmR4mXwrqWQQIVGVztbqtINeBQ')
 4. отправляет сообщение разработчику, что файлы обновились
 """
 
-#Скачивает файл относительно курса бакалавриата
 def get_file(course):
-    url = 'https://guu.ru/студентам/расписание-сессий/schedule/'
-    response = requests.get(url)
+    url = 'https://guu.ru/student/schedule/'
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
+    response = requests.get(url, headers=headers)
+    print(response)
     bs = BeautifulSoup(response.text,"lxml")
     rows = bs.find_all('a', class_ = "doc-unit odd")
-
+    print(rows)
     for row in rows:
         link = row.attrs["href"]
         if link == 'None': continue
-        # print(link)
         if str(link).find(f'{course}-курс-бакалавриат') != -1:
-            # response = requests.get(link, '../files')
-            wget.download(link, '../files/')
+            os.system(f"wget {link} -P ../files")
             idx = str(link).find(f'{course}-курс-бакалавриат')
             path = link[idx:]
             return f'../files/{path}'
+
 
 #Обработка файла: разделение объединенных ячеек
 def unmerge_all_cells(path):
@@ -60,43 +61,36 @@ def unmerge_all_cells(path):
 def unmerge_institutes(path):
     workbook = load_workbook(path)
     for s in workbook.sheetnames:
-        if s.find(',') != -1:  # название нашего листа 'ИУПСиБК, ИИС 4 курс'
+        if s.find(',') != -1:               # название нашего листа 'ИУПСиБК, ИИС 4 курс'
             sheet1 = workbook[s]
 
-            t = s.find('курс') - 2  # вычленяем курс из названия листа
-            z = s.find(',')  # находим позицию запятой
-            fname = s[:z] + ' ' + s[t:]  # иупсибк
-            sname = s[z + 2:]  # иис
+            t = s.find('курс') - 2          # вычленяем курс из названия листа
+            z = s.find(',')                 # находим позицию запятой
+            fname = s[:z] + ' ' + s[t:]     # иупсибк
+            sname = s[z + 2:]               # иис
             # Теперь лист на котором мы были будет называться как sname, а новый как fname
-            sheet1.title = sname  # переименовыем в ИИС 4 курс
-            workbook.create_sheet(fname)  # создаем лист ИУПСиБК 4 курс
-            workbook.save(path)  # страхуемся, сохраняем наш док
+            sheet1.title = sname            # переименовыем в ИИС 4 курс
+            workbook.create_sheet(fname)    # создаем лист ИУПСиБК 4 курс
+            workbook.save(path)             # сохраняем наш док
 
             # переопределяем листы, так четче видно что где
-            sheet1 = workbook[sname]  # иис тут заполнено
-            sheet2 = workbook[fname]  # иупсибк тут пусто
+            sheet1 = workbook[sname]        # иис тут заполнено
+            sheet2 = workbook[fname]        # иупсибк тут пусто
 
             last_inst_name = ''
             y, x = get_indexes(sheet1, 'ИНСТИТУТ')
             for i in range(1, sheet1.max_column):
-                # val = sheet1[y][i].value
                 val = sheet1.cell(y, i).value
                 if val != 'None':
                     last_inst_name = val
 
-            inst_idx = get_indexes(sheet1, last_inst_name)  # индекс с которого начинается второй институт(ИИС)
+            inst_idx = get_indexes(sheet1, last_inst_name)
 
-            # print(f'Последний институт {last_inst_name}, находится {inst_idx}')
-
-            # заполняем новый лист(ИУПСиБК)
+            # заполняем новый лист
             for i in range(1, sheet1.max_row):
                 for j in range(1, inst_idx[1]):
                     sheet2.cell(i, j).value = sheet1.cell(i, j).value
-
-            # print(f'inst_idx[1]: {inst_idx[1]}')
-            # удлаляем ненужные столбцы с исходного листа
-            sheet1.delete_cols(idx=5, amount=(inst_idx[1] - 5))  # тут пока костыль в виде 4 - именно столько столбцов нужно отступить слева
-            # надо будет написать функцию добывающую этот индекс, чтобы было гибко
+            sheet1.delete_cols(idx=5, amount=(inst_idx[1] - 5))
             workbook.save(path)
             workbook.close()
 
@@ -115,21 +109,18 @@ def update_docs():
     path = '../files'
     try:
         shutil.rmtree(path)
-        # print("Папка удалена.")
     except OSError as error:
         print(f"Возникла ошибка: {error}")
         bot.send_message(chat_id = '479601165', text = f"Возникла ошибка: {error}")
     os.mkdir(path)
-    # print("Папка создана.")
 
     with Path(r"../files") as direction:
-
         for i in range(1, 5):
-            # filename = str(i) + "-курс-бакалавриат*.xlsx"
-            path = get_file(i)  # скачиваем новый файл
-            # print(f'path: {path}')
+            path = get_file(i)
             unmerge_all_cells(path)
             unmerge_institutes(path)
+
+update_docs()
 
 while True:
     sec = time.time()
@@ -141,4 +132,4 @@ while True:
         with open('upd_logs.txt', 'w') as logs_file:
             date = time.strftime('%d %B %H:%M')
             logs_file.write(f'Файлы с расписанием были обновлены. {date}')
-
+            bot.send_message(chat_id='479601165', text=f'Файлы с расписанием были обновлены. {date}')

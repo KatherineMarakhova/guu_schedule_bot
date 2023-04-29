@@ -190,7 +190,6 @@ class Direct:
         return answer
 
     def get_scd_even(self, eveness = "ЧЁТ."):
-
         answer = f'Расписание для {self.edup} {self.course}-{self.group}\n'
         answer += f'{eveness.capitalize()} неделя\n'
 
@@ -200,12 +199,9 @@ class Direct:
         row = day[0]  # строка
         coll = self.get_indexes_cat(self.sheet, self.edup, 'Образовательная программа')[1]  # столбец
         coll = coll + int(self.group) - 1  # столбец относительно группы
-
-
         temp = ''
         lesson = ''
         for i in range(row, self.sheet.max_row):
-
             day = str(self.sheet.cell(i, d_idx).value)
             if (day.lower() == 'none'): break
 
@@ -214,9 +210,7 @@ class Direct:
             sbj = str(self.sheet.cell(i, coll).value)
 
             if sbj == 'None': sbj = 'Занятий нет'
-
             dash = '--------------------------------------️'
-
             if temp != day:
                 spaces = ''
                 n = len(dash) - len('❗️' + day + '❗️') - 1
@@ -225,7 +219,6 @@ class Direct:
                 answer += f'{dash}\n❗️{day}❗{spaces}|️\n{dash}\n'
                 lesson = 1
                 temp = day
-
             if even.strip().lower() == eveness.strip().lower():
                 answer += (f'{lesson}📍{time}\n{sbj}\n\n')
                 lesson += 1
