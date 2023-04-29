@@ -120,8 +120,6 @@ def update_docs():
             unmerge_all_cells(path)
             unmerge_institutes(path)
 
-update_docs()
-
 while True:
     sec = time.time()
     struct = time.localtime(sec)
