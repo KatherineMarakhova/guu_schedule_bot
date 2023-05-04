@@ -6,7 +6,7 @@ from Direct import *
 
 def fullsqd(obj, chatid):
     msg = bot.send_message(chatid, "Загрузка..")
-    answer = obj.get_scd_full()
+    answer = obj.get_scd_full(chatid)
     if len(answer) > 4096:
         bot.edit_message_text(text='Текст расписания слишком большой!\nПожалуйста, выберите другой формат вывода',
                               chat_id = chatid, message_id=msg.message_id)
@@ -14,7 +14,7 @@ def fullsqd(obj, chatid):
         bot.edit_message_text(text=answer, chat_id = chatid, message_id=msg.message_id)
 
 def evenscd(obj, eveness, chatid):
-    answer = obj.get_scd_even(eveness)
+    answer = obj.get_scd_even(eveness, chatid)
     bot.send_message(chatid, answer)
 
 def weekdayscd(msg, obj):
@@ -43,14 +43,14 @@ def repbtns(chatid):                            # reply buttons
     bot.send_message(chatid, "Выбери формат вывода расписания\n", reply_markup=repmarkup)
 
 def clear_chat(obj, msg):
-    n = obj.msg_count
+
     for i in range(n-6):
         bot.delete_message(msg.chat.id, msg.id-i)
     obj.clear_attributes()
     button_message(msg)
 
 def inline_btns_group(obj, chatid):
-    obj.get_list_group()                        # формируем лист групп
+    obj.get_list_group(chatid)                        # формируем лист групп
     markup = types.InlineKeyboardMarkup()
     i = 0                                       # счетчик групп для колбека
 
@@ -63,7 +63,7 @@ def inline_btns_group(obj, chatid):
     bot.send_message(chatid, "Отлично! Теперь нужно выбрать группу", reply_markup=markup)
 
 def inline_btns_edup(obj, chatid):
-    obj.get_list_edup()                         # формируем лист обр программ
+    obj.get_list_edup(chatid)                         # формируем лист обр программ
     markup = types.InlineKeyboardMarkup()
     i = 0                                       # счетчик обр программ для колбека
 
@@ -76,7 +76,7 @@ def inline_btns_edup(obj, chatid):
     bot.send_message(chatid, f"Образовательные программы {obj.napr.capitalize()}:", reply_markup=markup)
 
 def inline_btns_napr(obj, chatid):
-    obj.get_list_napr()                         # формируем лист направлений
+    obj.get_list_napr(chatid)                         # формируем лист направлений
     markup = types.InlineKeyboardMarkup()
     i = 0
     for name in obj.list_napr:
@@ -89,7 +89,7 @@ def inline_btns_napr(obj, chatid):
 
 def inline_btns_inst(obj, chatid, msg=''):
 
-    obj.get_list_inst()                         # формируем лист направлений
+    obj.get_list_inst(chatid)                         # формируем лист направлений
     markup = types.InlineKeyboardMarkup()
     i = 0
     for name in obj.list_insts:
@@ -113,8 +113,8 @@ def button_message(message):
     markup = types.InlineKeyboardMarkup()
     btn = types.InlineKeyboardButton("Выбрать курс", callback_data = 'start')
     markup.add(btn)
-    user_direct.msg_count = 1
-    user_direct.add_token(message.chat.id)
+
+    user_direct.setget_chat_id(message.chat.id)
 
     if user_direct.course == '': #проверяем на первый запуск
         bot.send_message(message.chat.id,'Привет! \nЯ бот-хранитель распиcания бакалавриата ГУУ!\n'
@@ -129,7 +129,6 @@ def button_message(message):
 @bot.callback_query_handler(func=lambda call:True)
 def callback_query(call):
     req = call.data.split('_')
-    user_direct.msg_count += 1
 
     if req[0] == 'start':
         # bot.delete_message(call.message.chat.id, call.message.message_id)
@@ -149,23 +148,22 @@ def callback_query(call):
         course = int(str(req[0])[0])
         if course != user_direct.course:
             user_direct.clear_attributes()
-            user_direct.set_course(course)
-            user_direct.first_start()
+            user_direct.set_course(course, call.message.chat.id)
 
         inline_btns_inst(user_direct, call.message.chat.id, msg)
 
     # получили название института
     if req[0][1:] == 'inst':
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        user_direct.set_inst(user_direct.list_insts[int(req[0][:1])])      # добавили в наш объект выбранный институт
+        user_direct.set_inst(user_direct.list_insts[int(req[0][:1])], call.message.chat.id)      # добавили в наш объект выбранный институт
 
         inline_btns_napr(user_direct, call.message.chat.id)
 
     # получили название направления
     if req[0][1:] == 'napr':
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        user_direct.set_napr(user_direct.list_napr[int(req[0][:1])])
-        user_direct.get_list_edup()                           # формируем лист обр программ
+        user_direct.set_napr(user_direct.list_napr[int(req[0][:1])], call.message.chat.id)
+        user_direct.get_list_edup(call.message.chat.id)                           # формируем лист обр программ
         markup = types.InlineKeyboardMarkup()
         i = 0                                               # счетчик обр программ для колбека
 
@@ -180,14 +178,14 @@ def callback_query(call):
     # получили название обр программы
     if req[0][1:] == 'edup':
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        user_direct.set_edup(user_direct.list_edup[int(req[0][:1])])
+        user_direct.set_edup(user_direct.list_edup[int(req[0][:1])], call.message.chat.id)
 
         inline_btns_group(user_direct, call.message.chat.id)
 
     # получили группу
     if req[0][1:] == 'group':
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        user_direct.set_group(user_direct.list_groups[int(req[0][:1])])
+        user_direct.set_group(user_direct.list_groups[int(req[0][:1])], call.message.chat.id)
 
         bot.send_message(call.message.chat.id, "Настройка завершена!✅\n"
                                                f"Курс: {user_direct.course} \n"
@@ -202,15 +200,14 @@ def callback_query(call):
     weekdays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']
 
     if req[0] in weekdays:
-        answer = user_direct.get_scd_weekday(req[0])
+        answer = user_direct.get_scd_weekday(req[0], call.message.chat.id)
         # bot.send_message(call.message.chat.id, answer)
         user_direct.week_msg = bot.edit_message_text(text=answer, chat_id=call.message.chat.id, message_id=call.message.message_id)
         weekdayscd(call.message, user_direct)
 
-
 @bot.message_handler(content_types=['text'])
 def message_reply(message):
-    user_direct.msg_count += 1
+
     chatid = message.chat.id
 
     if message.text == "Расписание полностью":
@@ -234,23 +231,13 @@ def message_reply(message):
         bot.send_message(chatid, 'Выбери, что хочешь изменить', reply_markup=markup)
 
     if message.text == "Начать сначала":
-        # markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-        # markup.add('Сотри все')
-        # markup.add('Оставь')
-        # bot.send_message(chatid, 'Могу стереть все предыдущие сообщения?', reply_markup = markup)
-
         button_message(message)
 
-    # if message.text.lower() == 'Сотри все'.lower():
-    #     clear_chat(my_direct, message)
-    #
-    # if message.text.lower() == 'Оставь'.lower():
-    #     button_message(message) # запуск с команды старт
 
     if message.text.lower() == 'Обновить расписание'.lower():
         msg = bot.send_message(message.chat.id, "Загрузка..")
         # os.remove(my_direct.path)
-        user_direct.first_start()         # тк курс у нас не меняется, то мы просто подгружаем и обрабатываем док с сайта
+
         bot.edit_message_text(f'Распсиание для {user_direct.course} курса обновлено.', chat_id = message.chat.id, message_id = msg.message_id)
         repbtns(message.chat.id)
         pass
@@ -272,7 +259,6 @@ def message_reply(message):
         user_direct.list_edup = ''
         user_direct.napr = ''
         inline_btns_napr(user_direct, message.chat.id)
-
 
     if message.text.lower() == 'Изменить институт'.lower():
         user_direct.group = ''
