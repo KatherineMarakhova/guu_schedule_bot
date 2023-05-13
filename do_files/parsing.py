@@ -1,7 +1,5 @@
 import requests
 import time
-import wget
-import urllib.request
 from bs4 import BeautifulSoup
 import os
 import shutil
@@ -9,8 +7,9 @@ from pathlib import Path
 import telebot
 from openpyxl import load_workbook
 from openpyxl.utils import range_boundaries
+import config
 
-bot = telebot.TeleBot('5679216888:AAEnHl7wKQmR4mXwrqWQQIVGVztbqtINeBQ')
+bot = telebot.TeleBot(config.token)
 
 """
 Что делает этот скрипт:
@@ -124,7 +123,7 @@ while True:
     sec = time.time()
     struct = time.localtime(sec)
     t = time.strftime('%H:%M', struct)
-    if t == '17:31':
+    if t == '09:00':
         update_docs()
 
         with open('upd_logs.txt', 'w') as logs_file:
