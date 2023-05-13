@@ -124,7 +124,7 @@ while True:
     sec = time.time()
     struct = time.localtime(sec)
     t = time.strftime('%H:%M', struct)
-    if t == '11:27':
+    if t == '17:31':
         update_docs()
 
         with open('upd_logs.txt', 'w') as logs_file:
