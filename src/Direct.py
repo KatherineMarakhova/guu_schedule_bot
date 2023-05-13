@@ -31,7 +31,7 @@ class Direct:
         cell = sh.cell(row=new_row, column=1)
         cell.value = chat_id
         wb.save(filepath)
-        self.setget_chat_id()  # рекурсия будет работать пока не добавится этот новый id
+        self.setget_chat_id(chat_id)  # рекурсия будет работать пока не добавится этот новый id
 
     def set_course(self, course, chat_id):
         self.course = course
