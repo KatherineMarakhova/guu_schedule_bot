@@ -26,7 +26,7 @@ def get_file(course):
     response = requests.get(url, headers=headers)
     print(response)
     bs = BeautifulSoup(response.text,"lxml")
-    rows = bs.find_all('a', class_ = "doc-unit odd")
+    rows = bs.find_all('a')
     print(rows)
     for row in rows:
         link = row.attrs["href"]
@@ -80,7 +80,7 @@ def unmerge_institutes(path):
             y, x = get_indexes(sheet1, 'ИНСТИТУТ')
             for i in range(1, sheet1.max_column):
                 val = sheet1.cell(y, i).value
-                if val != 'None':
+                if val:
                     last_inst_name = val
 
             inst_idx = get_indexes(sheet1, last_inst_name)
@@ -103,6 +103,7 @@ def get_indexes(sheet, category):
             if (val == category):
                 return (i, j)
 
+
 #Главная функция, активирующая всю работу
 def update_docs():
     path = '../files'
@@ -119,14 +120,14 @@ def update_docs():
             unmerge_all_cells(path)
             unmerge_institutes(path)
 
-while True:
-    sec = time.time()
-    struct = time.localtime(sec)
-    t = time.strftime('%H:%M', struct)
-    if t == '09:00':
-        update_docs()
+# while True:
+#     sec = time.time()
+#     struct = time.localtime(sec)
+#     t = time.strftime('%H:%M', struct)
+#     if t == '09:00':
+update_docs()
 
-        with open('upd_logs.txt', 'w') as logs_file:
-            date = time.strftime('%d %B %H:%M')
-            logs_file.write(f'Файлы с расписанием были обновлены. {date}')
-            bot.send_message(chat_id='479601165', text=f'Файлы с расписанием были обновлены. {date}')
+with open('upd_logs.txt', 'w') as logs_file:
+    date = time.strftime('%d %B %H:%M')
+    logs_file.write(f'Файлы с расписанием были обновлены. {date}')
+    bot.send_message(chat_id='479601165', text=f'Файлы с расписанием были обновлены. {date}')
