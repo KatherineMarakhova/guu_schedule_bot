@@ -120,14 +120,14 @@ def update_docs():
             unmerge_all_cells(path)
             unmerge_institutes(path)
 
-# while True:
-#     sec = time.time()
-#     struct = time.localtime(sec)
-#     t = time.strftime('%H:%M', struct)
-#     if t == '09:00':
-update_docs()
+while True:
+    sec = time.time()
+    struct = time.localtime(sec)
+    t = time.strftime('%H:%M', struct)
+    if t == '04:00':
+        update_docs()
 
-with open('upd_logs.txt', 'w') as logs_file:
-    date = time.strftime('%d %B %H:%M')
-    logs_file.write(f'Файлы с расписанием были обновлены. {date}')
-    bot.send_message(chat_id='479601165', text=f'Файлы с расписанием были обновлены. {date}')
+        with open('upd_logs.txt', 'w') as logs_file:
+            date = time.strftime('%d %B %H:%M')
+            logs_file.write(f'Файлы с расписанием были обновлены. {date}')
+            bot.send_message(chat_id='479601165', text=f'Файлы с расписанием были обновлены. {date}')
